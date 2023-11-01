@@ -24,6 +24,7 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
+import firebase from '../../../../configs/firebase'; // Added import for firebase
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
@@ -35,8 +36,39 @@ export default function TownSelection(): JSX.Element {
   const loginController = useLoginController();
   const { setTownController, townsService } = loginController;
   const { connect: videoConnect } = useVideoContext();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // Added state for when logged in
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false); // Added state for when logging in
 
   const toast = useToast();
+
+  // Added function to handle Google login
+  const handleGoogleLogin = useCallback(async () => {
+    try {
+      // Initialize Firebase authentication
+      const provider = new firebase.auth.GoogleAuthProvider();
+      // Sign in with Google popup
+      const result = await firebase.auth().signInWithPopup(provider);
+
+      // Check if the user is authenticated
+      if (result.user) {
+        setIsLoggedIn(true);
+      } else {
+        toast({
+          title: 'Google Login Failed',
+          description: 'Unable to authenticate with Google',
+          status: 'error',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Google Login Error',
+        description: 'An error occurred while logging in with Google',
+        status: 'error',
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }, [toast]);
 
   const updateTownListings = useCallback(() => {
     townsService.listTowns().then(towns => {
@@ -137,6 +169,15 @@ export default function TownSelection(): JSX.Element {
   );
 
   const handleCreate = async () => {
+    // Added check for if user is logged in
+    if (!isLoggedIn) {
+      toast({
+        title: 'Unable to create town',
+        description: 'Please log in with Google before creating a town',
+        status: 'error',
+      });
+      return;
+    }
     if (!userName || userName.length === 0) {
       toast({
         title: 'Unable to create town',
@@ -238,6 +279,21 @@ export default function TownSelection(): JSX.Element {
     <>
       <form>
         <Stack>
+          {/* Added box for Google login */}
+          <Box p='4' borderWidth='1px' borderRadius='lg'>
+            <Heading as='h2' size='lg'>
+              Log In
+            </Heading>
+
+            <Button
+              onClick={handleGoogleLogin}
+              isLoading={isLoggingIn}
+              isDisabled={isLoggedIn}
+              colorScheme={isLoggedIn ? 'green' : 'blue'}
+              marginTop='4'>
+              {isLoggedIn ? 'Login Successful' : 'Log in with Google'}
+            </Button>
+          </Box>
           <Box p='4' borderWidth='1px' borderRadius='lg'>
             <Heading as='h2' size='lg'>
               Select a username
