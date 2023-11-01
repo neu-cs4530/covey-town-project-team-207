@@ -20,6 +20,9 @@ export default class Player {
   /** The secret token that allows this client to access our video resources for this town * */
   private _videoToken?: string;
 
+  /** A count of how many times this player has been flagged for profanity in chat */
+  private _profanityOffenses: number;
+
   /** A special town emitter that will emit events to the entire town BUT NOT to this player */
   public readonly townEmitter: TownEmitter;
 
@@ -34,6 +37,15 @@ export default class Player {
     this._id = nanoid();
     this._sessionToken = nanoid();
     this.townEmitter = townEmitter;
+    this._profanityOffenses = 0;
+  }
+
+  get profanityOffenses(): number {
+    return this._profanityOffenses;
+  }
+
+  incProfanityOffenses(): void {
+    this._profanityOffenses++;
   }
 
   get userName(): string {
