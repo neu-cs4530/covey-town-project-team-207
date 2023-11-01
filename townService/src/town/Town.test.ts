@@ -24,6 +24,7 @@ import Town from './Town';
 
 const mockTwilioVideo = mockDeep<TwilioVideo>();
 jest.spyOn(TwilioVideo, 'getInstance').mockReturnValue(mockTwilioVideo);
+jest.spyOn(Town.prototype as any, '_performProfanityCheck').mockReturnValue(Promise.resolve(false));
 
 type TestMapDict = {
   [key in string]: ITiledMap;
