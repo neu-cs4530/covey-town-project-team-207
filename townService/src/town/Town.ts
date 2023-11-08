@@ -1,6 +1,8 @@
 import { ITiledMap, ITiledMapObjectLayer } from '@jonbell/tiled-map-type-guard';
 import { nanoid } from 'nanoid';
 import { BroadcastOperator } from 'socket.io';
+import axios from 'axios';
+import assert from 'assert';
 import InvalidParametersError from '../lib/InvalidParametersError';
 import IVideoClient from '../lib/IVideoClient';
 import Player from '../lib/Player';
@@ -133,9 +135,18 @@ export default class Town {
       this._connectedSockets.delete(socket);
     });
 
-    // Set up a listener to forward all chat messages to all clients in the town
-    socket.on('chatMessage', (message: ChatMessage) => {
+    // Set up a listener to forward all chat messages to all clients in the town.
+    // if the message has profanity in it, the players profanity count is incremented.
+    socket.on('chatMessage', async (message: ChatMessage) => {
       this._broadcastEmitter.emit('chatMessage', message);
+      const hasProfanity = await this._performProfanityCheck(message);
+      if (hasProfanity) {
+        const offendingPlayer: Player | undefined = this.players.find(
+          player => player.userName === message.author,
+        );
+        assert(offendingPlayer);
+        offendingPlayer.incProfanityOffenses();
+      }
     });
 
     // Register an event listener for the client socket: if the client updates their
@@ -432,6 +443,32 @@ export default class Town {
           );
         }
       }
+    }
+  }
+
+  /**
+   * sends a request to the neutrinoapi bad-word-filter to determine if the chat message has profanity in it or not
+   * @param message the message to check
+   * @returns true if theres a bad word, false otherwise
+   */
+  private async _performProfanityCheck(message: ChatMessage) {
+    try {
+      const response = await axios.post(
+        'https://neutrinoapi.net/bad-word-filter',
+        { content: message.body },
+        {
+          headers: {
+            'User-ID': `${process.env.PROFANITY_API_USERNAME}`,
+            'API-Key': `${process.env.PROFANITY_API_TOKEN}`,
+          },
+        },
+      );
+      if (response.status !== 200) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      return response.data['is-bad'];
+    } catch (error) {
+      throw new Error(`Error posting data: ${error}`);
     }
   }
 }
