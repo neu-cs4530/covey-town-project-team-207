@@ -21,8 +21,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-      - name: Installing modules
-        run: npm install
       - name: Build and test backend service
         env: # Pass the Twilio secrets into environmental variables for the backend tests to use
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
