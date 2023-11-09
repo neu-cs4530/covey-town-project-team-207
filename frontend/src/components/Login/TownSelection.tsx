@@ -24,7 +24,7 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
-import firebase from '../../../../configs/firebase'; // Added import for firebase
+import firebase from '../../../configs/firebase'; // Added import for firebase
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
