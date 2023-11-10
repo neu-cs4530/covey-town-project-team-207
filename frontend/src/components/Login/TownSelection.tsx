@@ -10,6 +10,7 @@ import {
   Heading,
   Input,
   Stack,
+  Spacer,
   Table,
   TableCaption,
   Tbody,
@@ -25,6 +26,8 @@ import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
 import firebase from '../../../configs/firebase'; // Added import for firebase
+import { getDatabase, ref, set } from 'firebase/database';
+import { getAuth, signOut } from 'firebase/auth';
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
@@ -41,6 +44,22 @@ export default function TownSelection(): JSX.Element {
 
   const toast = useToast();
 
+  /*
+what other info is needed in the db? the towns that are connected to?
+the towns created?
+rn the id in the DB is created from the login process, but not used in the town process
+I think it should be updated to use the created id everywhere 
+
+  */
+
+  const insertUserDB = async (userId: string, email: string | null, displayName: string | null) => {
+    const db = getDatabase();
+    set(ref(db, 'users/' + userId), {
+      email: email,
+      displayName: displayName,
+    });
+  };
+
   // Added function to handle Google login
   const handleGoogleLogin = useCallback(async () => {
     try {
@@ -52,6 +71,9 @@ export default function TownSelection(): JSX.Element {
       // Check if the user is authenticated
       if (result.user) {
         setIsLoggedIn(true);
+        setUserName(result.user?.displayName ?? '');
+        // add user to firebase DB
+        await insertUserDB(result.user.uid, result.user.email, result.user.displayName);
       } else {
         toast({
           title: 'Google Login Failed',
@@ -67,6 +89,20 @@ export default function TownSelection(): JSX.Element {
       });
     } finally {
       setIsLoggingIn(false);
+    }
+  }, [toast]);
+
+  const handleGoogleLogout = useCallback(async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      setIsLoggedIn(false);
+    } catch (error) {
+      toast({
+        title: 'Signout Error',
+        description: 'An error occurred while signing out',
+        status: 'error',
+      });
     }
   }, [toast]);
 
@@ -100,6 +136,14 @@ export default function TownSelection(): JSX.Element {
           toast({
             title: 'Unable to join town',
             description: 'Please enter a town ID',
+            status: 'error',
+          });
+          return;
+        }
+        if (!isLoggedIn) {
+          toast({
+            title: 'Unable to join town',
+            description: 'Please log in before joining a town',
             status: 'error',
           });
           return;
@@ -165,7 +209,7 @@ export default function TownSelection(): JSX.Element {
         }
       }
     },
-    [setTownController, userName, toast, videoConnect, loginController],
+    [setTownController, userName, toast, videoConnect, loginController, isLoggedIn],
   );
 
   const handleCreate = async () => {
@@ -181,6 +225,14 @@ export default function TownSelection(): JSX.Element {
       toast({
         title: 'Unable to create town',
         description: 'Please enter a town name',
+        status: 'error',
+      });
+      return;
+    }
+    if (!isLoggedIn) {
+      toast({
+        title: 'Unable to create town',
+        description: 'Please log in before joining a town',
         status: 'error',
       });
       return;
@@ -282,7 +334,16 @@ export default function TownSelection(): JSX.Element {
               isDisabled={isLoggedIn}
               colorScheme={isLoggedIn ? 'green' : 'blue'}
               marginTop='4'>
-              {isLoggedIn ? 'Login Successful' : 'Log in with Google'}
+              {isLoggedIn ? `Logged in as ${userName}` : 'Log in with Google'}
+            </Button>
+            <Spacer/>
+            <Button
+              onClick={handleGoogleLogout}
+              isLoading={isLoggingIn}
+              isDisabled={!isLoggedIn}
+              colorScheme={'red'}
+              >
+                Logout
             </Button>
           </Box>
           <Box p='4' borderWidth='1px' borderRadius='lg'>
