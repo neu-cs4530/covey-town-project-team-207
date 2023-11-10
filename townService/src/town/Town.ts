@@ -148,6 +148,9 @@ export default class Town {
         assert(offendingPlayer);
         offendingPlayer.incProfanityOffenses();
         this._handleProfanityOffenses(offendingPlayer);
+        console.log(
+          `Message from ${offendingPlayer.userName} found to have profanity. The message was ${message.body}. This was the players ${offendingPlayer.profanityOffenses} offense`,
+        );
       }
     });
 
@@ -453,7 +456,7 @@ export default class Town {
    * @param message the message to check
    * @returns true if theres a bad word, false otherwise
    */
-  private async _performProfanityCheck(message: ChatMessage) {
+  private async _performProfanityCheck(message: ChatMessage): Promise<boolean> {
     try {
       const response = await axios.post(
         'https://neutrinoapi.net/bad-word-filter',
@@ -466,11 +469,13 @@ export default class Town {
         },
       );
       if (response.status !== 200) {
-        throw new Error(`Request failed with status ${response.status}`);
+        console.error(`Request failed with status ${response.status}`);
+        return false;
       }
       return response.data['is-bad'];
     } catch (error) {
-      throw new Error(`Error posting data: ${error}`);
+      console.error(`Error posting data: ${error}`);
+      return false;
     }
   }
 
