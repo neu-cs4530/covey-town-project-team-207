@@ -136,7 +136,8 @@ export default class Town {
     });
 
     // Set up a listener to forward all chat messages to all clients in the town.
-    // if the message has profanity in it, the players profanity count is incremented.
+    // if the message has profanity in it, the players profanity count is incremented, and
+    // actions are triggered based on the number of profanity offenses
     socket.on('chatMessage', async (message: ChatMessage) => {
       this._broadcastEmitter.emit('chatMessage', message);
       const hasProfanity = await this._performProfanityCheck(message);
