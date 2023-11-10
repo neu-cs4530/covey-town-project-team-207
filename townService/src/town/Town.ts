@@ -146,6 +146,7 @@ export default class Town {
         );
         assert(offendingPlayer);
         offendingPlayer.incProfanityOffenses();
+        this._handleProfanityOffenses(offendingPlayer);
       }
     });
 
@@ -469,6 +470,60 @@ export default class Town {
       return response.data['is-bad'];
     } catch (error) {
       throw new Error(`Error posting data: ${error}`);
+    }
+  }
+
+  /**
+   * Trigger an action based on the number of times a player has been flagged for profanity
+   * 1,2:   trigger warning message
+   * 3:     trigger vote kick
+   * If vote kick is unsuccessful
+   * 4: 5:  trigger final warning message
+   * 6:     trigger kick from town
+   * @param offendingPlayer the player that has been flagged for profanity
+   */
+  private _handleProfanityOffenses(offendingPlayer: Player) {
+    let message = '';
+
+    // Set the message based on the number of offenses
+    switch (offendingPlayer.profanityOffenses) {
+      case 1:
+      case 2:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
+        break;
+
+      case 3:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. A votekick will now be initiated.`;
+        break;
+
+      case 4:
+      case 5:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. The player will be kicked from the town on the third offense.`;
+        break;
+
+      case 6:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
+        break;
+
+      default:
+        break;
+    }
+
+    this._broadcastEmitter.emit('chatMessage', {
+      author: 'System',
+      body: message,
+      sid: nanoid(),
+      dateCreated: new Date(),
+    });
+
+    // Initiate a votekick on the offending player on their third offense
+    if (offendingPlayer.profanityOffenses === 3) {
+      // Initiate votekick
+    }
+
+    // Remove the offending player on their third offense after the votekick has failed
+    if (offendingPlayer.profanityOffenses === 6) {
+      // Remove player
     }
   }
 }
