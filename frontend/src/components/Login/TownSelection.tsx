@@ -25,9 +25,7 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
-import firebase from '../../../configs/firebase'; // Added import for firebase
-import { getDatabase, ref, set } from 'firebase/database';
-import { getAuth, signOut } from 'firebase/auth';
+import { firebaseLogout, googleFirebaseLogin, insertUserDB } from '../../helpers/loginHelpers';
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
@@ -51,23 +49,10 @@ rn the id in the DB is created from the login process, but not used in the town 
 I think it should be updated to use the created id everywhere 
 
   */
-
-  const insertUserDB = async (userId: string, email: string | null, displayName: string | null) => {
-    const db = getDatabase();
-    set(ref(db, 'users/' + userId), {
-      email: email,
-      displayName: displayName,
-    });
-  };
-
   // Added function to handle Google login
   const handleGoogleLogin = useCallback(async () => {
     try {
-      // Initialize Firebase authentication
-      const provider = new firebase.auth.GoogleAuthProvider();
-      // Sign in with Google popup
-      const result = await firebase.auth().signInWithPopup(provider);
-
+      const result = await googleFirebaseLogin();
       // Check if the user is authenticated
       if (result.user) {
         setIsLoggedIn(true);
@@ -94,8 +79,7 @@ I think it should be updated to use the created id everywhere
 
   const handleGoogleLogout = useCallback(async () => {
     try {
-      const auth = getAuth();
-      await signOut(auth);
+      await firebaseLogout();
       setIsLoggedIn(false);
     } catch (error) {
       toast({
@@ -330,20 +314,21 @@ I think it should be updated to use the created id everywhere
 
             <Button
               onClick={handleGoogleLogin}
+              data-testid='town-login'
               isLoading={isLoggingIn}
               isDisabled={isLoggedIn}
               colorScheme={isLoggedIn ? 'green' : 'blue'}
               marginTop='4'>
               {isLoggedIn ? `Logged in as ${userName}` : 'Log in with Google'}
             </Button>
-            <Spacer/>
+            <Spacer />
             <Button
               onClick={handleGoogleLogout}
               isLoading={isLoggingIn}
+              data-testid='town-logout'
               isDisabled={!isLoggedIn}
-              colorScheme={'red'}
-              >
-                Logout
+              colorScheme={'red'}>
+              Logout
             </Button>
           </Box>
           <Box p='4' borderWidth='1px' borderRadius='lg'>
