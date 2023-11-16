@@ -39,7 +39,7 @@ export default function TownSelection(): JSX.Element {
   const { connect: videoConnect } = useVideoContext();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // Added state for when logged in
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false); // Added state for when logging in
-
+  const [firebaseID, setFirebaseID] = useState<string>(''); // the firebase id of this user
   const toast = useToast();
 
   /*
@@ -57,6 +57,7 @@ I think it should be updated to use the created id everywhere
       if (result.user) {
         setIsLoggedIn(true);
         setUserName(result.user?.displayName ?? '');
+        setFirebaseID(result.user.uid);
         // add user to firebase DB
         await insertUserDB(result.user.uid, result.user.email, result.user.displayName);
       } else {
@@ -159,6 +160,7 @@ I think it should be updated to use the created id everywhere
           userName,
           townID: coveyRoomID,
           loginController,
+          firebaseID,
         });
         await newController.connect();
         const videoToken = newController.providerVideoToken;
@@ -193,7 +195,7 @@ I think it should be updated to use the created id everywhere
         }
       }
     },
-    [setTownController, userName, toast, videoConnect, loginController, isLoggedIn],
+    [setTownController, userName, toast, videoConnect, loginController, isLoggedIn, firebaseID],
   );
 
   const handleCreate = async () => {

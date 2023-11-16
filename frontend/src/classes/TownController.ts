@@ -12,6 +12,7 @@ import ViewingArea from '../components/Town/interactables/ViewingArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
+import { banPlayerByFirebaseID } from '../helpers/loginHelpers';
 import {
   ChatMessage,
   CoveyTownSocket,
@@ -43,6 +44,7 @@ export type ConnectionProperties = {
   userName: string;
   townID: string;
   loginController: LoginController;
+  firebaseID: string;
 };
 
 /**
@@ -202,11 +204,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   private _interactableEmitter = new EventEmitter();
 
-  public constructor({ userName, townID, loginController }: ConnectionProperties) {
+  private _firebaseID?: string;
+
+  public constructor({ userName, townID, loginController, firebaseID }: ConnectionProperties) {
     super();
     this._townID = townID;
     this._userName = userName;
     this._loginController = loginController;
+    this._firebaseID = firebaseID;
 
     /*
         The event emitter will show a warning if more than this number of listeners are registered, as it
@@ -395,6 +400,9 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
      */
     this._socket.on('playerDisconnect', disconnectedPlayer => {
       this._players = this.players.filter(eachPlayer => eachPlayer.id !== disconnectedPlayer.id);
+      if (disconnectedPlayer.id === this._ourPlayer?.id) {
+        this._kickOurPlayer();
+      }
     });
     /**
      * When a player moves, update local state and emit an event to the controller's event listeners
@@ -698,6 +706,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
   private _playersByIDs(playerIDs: string[]): PlayerController[] {
     return this._playersInternal.filter(eachPlayer => playerIDs.includes(eachPlayer.id));
+  }
+
+  private _kickOurPlayer(): void {
+    banPlayerByFirebaseID(this._firebaseID);
+    this.disconnect();
   }
 }
 

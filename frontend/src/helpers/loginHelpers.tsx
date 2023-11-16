@@ -1,5 +1,5 @@
 import myFirebase from '../../configs/firebase'; // Added import for firebase
-import { getDatabase, ref, set } from 'firebase/database';
+import { getDatabase, ref, set, update } from 'firebase/database';
 import { getAuth, signOut } from 'firebase/auth';
 
 export async function googleFirebaseLogin(): Promise<
@@ -35,4 +35,9 @@ export async function insertUserDB(
     displayName: displayName,
   });
   return true;
+}
+
+export async function banPlayerByFirebaseID(dbID: string | undefined) {
+  const db = getDatabase();
+  update(ref(db, 'users/' + dbID), { banned: true });
 }

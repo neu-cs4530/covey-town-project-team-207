@@ -41,6 +41,7 @@ describe('TownController', () => {
   let mockLoginController: MockProxy<LoginController>;
   let userName: string;
   let townID: string;
+  let firebaseID: string;
   beforeAll(() => {
     mockLoginController = mock<LoginController>();
     process.env.NEXT_PUBLIC_TOWNS_SERVICE_URL = 'test';
@@ -84,7 +85,13 @@ describe('TownController', () => {
     mockClear(mockSocket);
     userName = nanoid();
     townID = nanoid();
-    testController = new TownController({ userName, townID, loginController: mockLoginController });
+    firebaseID = nanoid();
+    testController = new TownController({
+      userName,
+      townID,
+      loginController: mockLoginController,
+      firebaseID,
+    });
   });
   describe('With an unsuccesful connection', () => {
     it('Throws an error', async () => {

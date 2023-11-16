@@ -297,10 +297,11 @@ describe('Town Selection', () => {
     let newTownIsPublicCheckbox: HTMLInputElement;
     let newTownButton: HTMLElement;
     let loginButton: HTMLElement;
+    const firebaseID = nanoid();
     const userCreds = {
       user: {
         displayName: 'townSelectionTest',
-        uid: nanoid(),
+        uid: firebaseID,
         email: 'test@email.com',
       },
     };
@@ -373,6 +374,7 @@ describe('Town Selection', () => {
               userName,
               townID: coveyTownID,
               loginController: mockLoginController,
+              firebaseID,
             }),
           );
           await waitFor(() => expect(mockedTownController.connect).toBeCalled());
@@ -462,6 +464,7 @@ describe('Town Selection', () => {
                     userName: username,
                     townID: town.townID,
                     loginController: mockLoginController,
+                    firebaseID,
                   }),
                 );
 
@@ -656,6 +659,7 @@ describe('Town Selection', () => {
                 userName,
                 townID: townID,
                 loginController: mockLoginController,
+                firebaseID,
               }),
             );
             await waitFor(() => expect(mockedTownController.connect).toBeCalled());
