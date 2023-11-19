@@ -136,7 +136,8 @@ export default class Town {
     });
 
     // Set up a listener to forward all chat messages to all clients in the town.
-    // if the message has profanity in it, the players profanity count is incremented.
+    // if the message has profanity in it, the players profanity count is incremented, and
+    // actions are triggered based on the number of profanity offenses
     socket.on('chatMessage', async (message: ChatMessage) => {
       this._broadcastEmitter.emit('chatMessage', message);
       const hasProfanity = await this._performProfanityCheck(message);
@@ -146,6 +147,11 @@ export default class Town {
         );
         assert(offendingPlayer);
         offendingPlayer.incProfanityOffenses();
+        this._handleProfanityOffenses(offendingPlayer, socket);
+        // eslint-disable-next-line no-console
+        console.log(
+          `Message from ${offendingPlayer.userName} found to have profanity. The message was ${message.body}. This was the players ${offendingPlayer.profanityOffenses} offense`,
+        );
       }
     });
 
@@ -451,24 +457,82 @@ export default class Town {
    * @param message the message to check
    * @returns true if theres a bad word, false otherwise
    */
-  private async _performProfanityCheck(message: ChatMessage) {
-    try {
-      const response = await axios.post(
-        'https://neutrinoapi.net/bad-word-filter',
-        { content: message.body },
-        {
-          headers: {
-            'User-ID': `${process.env.PROFANITY_API_USERNAME}`,
-            'API-Key': `${process.env.PROFANITY_API_TOKEN}`,
-          },
-        },
-      );
-      if (response.status !== 200) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-      return response.data['is-bad'];
-    } catch (error) {
-      throw new Error(`Error posting data: ${error}`);
+  private async _performProfanityCheck(message: ChatMessage): Promise<boolean> {
+    // try {
+    //   const response = await axios.post(
+    //     'https://neutrinoapi.net/bad-word-filter',
+    //     { content: message.body },
+    //     {
+    //       headers: {
+    //         'User-ID': `${process.env.PROFANITY_API_USERNAME}`,
+    //         'API-Key': `${process.env.PROFANITY_API_TOKEN}`,
+    //       },
+    //     },
+    //   );
+    //   if (response.status !== 200) {
+    //     console.error(`Request failed with status ${response.status}`);
+    //     return false;
+    //   }
+    //   return response.data['is-bad'];
+    // } catch (error) {
+    //   console.error(`Error posting data: ${error}`);
+    //   return false;
+    // }
+    return true;
+  }
+
+  /**
+   * Trigger an action based on the number of times a player has been flagged for profanity
+   * 1,2:   trigger warning message
+   * 3:     trigger vote kick
+   * If vote kick is unsuccessful
+   * 4: 5:  trigger final warning message
+   * 6:     trigger kick from town
+   * @param offendingPlayer the player that has been flagged for profanity
+   */
+  private _handleProfanityOffenses(offendingPlayer: Player, socket: CoveyTownSocket) {
+    let message = '';
+
+    // Set the message based on the number of offenses
+    switch (offendingPlayer.profanityOffenses) {
+      case 1:
+      case 2:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
+        break;
+
+      case 3:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. A votekick will now be initiated.`;
+        break;
+
+      case 4:
+      case 5:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
+        break;
+
+      case 6:
+        message = `WARNING: Player ${offendingPlayer.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
+        break;
+
+      default:
+        break;
+    }
+
+    this._broadcastEmitter.emit('chatMessage', {
+      author: 'System',
+      body: message,
+      sid: nanoid(),
+      dateCreated: new Date(),
+    });
+
+    // Initiate a votekick on the offending player on their third offense
+    if (offendingPlayer.profanityOffenses === 3) {
+      // Initiate votekick
+    }
+
+    // Remove the offending player on their third offense after the votekick has failed
+    if (offendingPlayer.profanityOffenses === 6) {
+      // Remove player
+      this._removePlayer(offendingPlayer);
     }
   }
 }

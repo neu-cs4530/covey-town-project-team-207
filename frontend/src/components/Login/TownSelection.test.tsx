@@ -13,7 +13,7 @@ import { CancelablePromise, Town, TownsService } from '../../generated/client';
 import * as useLoginController from '../../hooks/useLoginController';
 import { mockTownController } from '../../TestUtils';
 import TownSelection from './TownSelection';
-
+import * as loginHelpers from '../../helpers/loginHelpers';
 const mockConnect = jest.fn(() => Promise.resolve());
 
 const mockToast = jest.fn();
@@ -296,6 +296,26 @@ describe('Town Selection', () => {
     let newTownNameField: HTMLInputElement;
     let newTownIsPublicCheckbox: HTMLInputElement;
     let newTownButton: HTMLElement;
+    let loginButton: HTMLElement;
+    const firebaseID = nanoid();
+    const userCreds = {
+      user: {
+        displayName: 'townSelectionTest',
+        uid: firebaseID,
+        email: 'test@email.com',
+      },
+    };
+    let googleLoginMock: jest.SpyInstance;
+    let firebaseDbMockInsert: jest.SpyInstance;
+
+    beforeAll(() => {
+      googleLoginMock = jest
+        .spyOn(loginHelpers, 'googleFirebaseLogin')
+        .mockResolvedValue(userCreds);
+      firebaseDbMockInsert = jest.spyOn(loginHelpers, 'insertUserDB').mockResolvedValue(true);
+      googleLoginMock.mockClear();
+      firebaseDbMockInsert.mockClear();
+    });
 
     beforeEach(async () => {
       jest.useFakeTimers();
@@ -315,6 +335,17 @@ describe('Town Selection', () => {
       newTownIsPublicCheckbox = renderData.getByLabelText('Publicly Listed') as HTMLInputElement;
       newTownNameField = renderData.getByPlaceholderText('New Town Name') as HTMLInputElement;
       newTownButton = renderData.getByTestId('newTownButton');
+      loginButton = renderData.getByTestId('town-login');
+
+      googleLoginMock.mockClear();
+      firebaseDbMockInsert.mockClear();
+      act(async () => {
+        await userEvent.click(loginButton);
+      });
+      await waitFor(() => {
+        expect(googleLoginMock).toBeCalled();
+        expect(firebaseDbMockInsert).toBeCalled();
+      });
     });
     describe('Joining existing towns', () => {
       describe('Joining an existing town by ID', () => {
@@ -343,6 +374,7 @@ describe('Town Selection', () => {
               userName,
               townID: coveyTownID,
               loginController: mockLoginController,
+              firebaseID,
             }),
           );
           await waitFor(() => expect(mockedTownController.connect).toBeCalled());
@@ -432,6 +464,7 @@ describe('Town Selection', () => {
                     userName: username,
                     townID: town.townID,
                     loginController: mockLoginController,
+                    firebaseID,
                   }),
                 );
 
@@ -626,6 +659,7 @@ describe('Town Selection', () => {
                 userName,
                 townID: townID,
                 loginController: mockLoginController,
+                firebaseID,
               }),
             );
             await waitFor(() => expect(mockedTownController.connect).toBeCalled());

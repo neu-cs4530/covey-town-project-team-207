@@ -162,6 +162,7 @@ describe('ConversationAreasList', () => {
         userName: nanoid(),
         townID: nanoid(),
         loginController: mock<LoginController>(),
+        firebaseID: nanoid(),
       });
       if (areasToRender === undefined) {
         areasToRender = areas;

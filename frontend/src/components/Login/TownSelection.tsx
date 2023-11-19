@@ -10,6 +10,7 @@ import {
   Heading,
   Input,
   Stack,
+  Spacer,
   Table,
   TableCaption,
   Tbody,
@@ -24,7 +25,7 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
-import firebase from '../../../configs/firebase'; // Added import for firebase
+import { firebaseLogout, googleFirebaseLogin, insertUserDB } from '../../helpers/loginHelpers';
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
@@ -38,20 +39,27 @@ export default function TownSelection(): JSX.Element {
   const { connect: videoConnect } = useVideoContext();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // Added state for when logged in
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false); // Added state for when logging in
-
+  const [firebaseID, setFirebaseID] = useState<string>(''); // the firebase id of this user
   const toast = useToast();
 
+  /*
+what other info is needed in the db? the towns that are connected to?
+the towns created?
+rn the id in the DB is created from the login process, but not used in the town process
+I think it should be updated to use the created id everywhere 
+
+  */
   // Added function to handle Google login
   const handleGoogleLogin = useCallback(async () => {
     try {
-      // Initialize Firebase authentication
-      const provider = new firebase.auth.GoogleAuthProvider();
-      // Sign in with Google popup
-      const result = await firebase.auth().signInWithPopup(provider);
-
+      const result = await googleFirebaseLogin();
       // Check if the user is authenticated
       if (result.user) {
         setIsLoggedIn(true);
+        setUserName(result.user?.displayName ?? '');
+        setFirebaseID(result.user.uid);
+        // add user to firebase DB
+        await insertUserDB(result.user.uid, result.user.email, result.user.displayName);
       } else {
         toast({
           title: 'Google Login Failed',
@@ -67,6 +75,19 @@ export default function TownSelection(): JSX.Element {
       });
     } finally {
       setIsLoggingIn(false);
+    }
+  }, [toast]);
+
+  const handleGoogleLogout = useCallback(async () => {
+    try {
+      await firebaseLogout();
+      setIsLoggedIn(false);
+    } catch (error) {
+      toast({
+        title: 'Signout Error',
+        description: 'An error occurred while signing out',
+        status: 'error',
+      });
     }
   }, [toast]);
 
@@ -104,6 +125,14 @@ export default function TownSelection(): JSX.Element {
           });
           return;
         }
+        if (!isLoggedIn) {
+          toast({
+            title: 'Unable to join town',
+            description: 'Please log in before joining a town',
+            status: 'error',
+          });
+          return;
+        }
         const isHighLatencyTownService =
           process.env.NEXT_PUBLIC_TOWNS_SERVICE_URL?.includes('onrender.com');
         connectWatchdog = setTimeout(() => {
@@ -131,6 +160,7 @@ export default function TownSelection(): JSX.Element {
           userName,
           townID: coveyRoomID,
           loginController,
+          firebaseID,
         });
         await newController.connect();
         const videoToken = newController.providerVideoToken;
@@ -165,7 +195,7 @@ export default function TownSelection(): JSX.Element {
         }
       }
     },
-    [setTownController, userName, toast, videoConnect, loginController],
+    [setTownController, userName, toast, videoConnect, loginController, isLoggedIn, firebaseID],
   );
 
   const handleCreate = async () => {
@@ -181,6 +211,14 @@ export default function TownSelection(): JSX.Element {
       toast({
         title: 'Unable to create town',
         description: 'Please enter a town name',
+        status: 'error',
+      });
+      return;
+    }
+    if (!isLoggedIn) {
+      toast({
+        title: 'Unable to create town',
+        description: 'Please log in before joining a town',
         status: 'error',
       });
       return;
@@ -278,11 +316,21 @@ export default function TownSelection(): JSX.Element {
 
             <Button
               onClick={handleGoogleLogin}
+              data-testid='town-login'
               isLoading={isLoggingIn}
               isDisabled={isLoggedIn}
               colorScheme={isLoggedIn ? 'green' : 'blue'}
               marginTop='4'>
-              {isLoggedIn ? 'Login Successful' : 'Log in with Google'}
+              {isLoggedIn ? `Logged in as ${userName}` : 'Log in with Google'}
+            </Button>
+            <Spacer />
+            <Button
+              onClick={handleGoogleLogout}
+              isLoading={isLoggingIn}
+              data-testid='town-logout'
+              isDisabled={!isLoggedIn}
+              colorScheme={'red'}>
+              Logout
             </Button>
           </Box>
           <Box p='4' borderWidth='1px' borderRadius='lg'>

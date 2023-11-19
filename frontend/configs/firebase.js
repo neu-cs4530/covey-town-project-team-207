@@ -10,6 +10,7 @@ const firebaseConfig = {
   storageBucket: 'covey-town-207.appspot.com',
   messagingSenderId: '81906889675',
   appId: '1:81906889675:web:1e019a298518a00f777c4e',
+  dataBaseURL: 'https://covey-town-207-default-rtdb.firebaseio.com/',
 };
 
 firebase.initializeApp(firebaseConfig);
