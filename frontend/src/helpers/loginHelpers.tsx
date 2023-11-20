@@ -1,5 +1,5 @@
 import myFirebase from '../../configs/firebase'; // Added import for firebase
-import { getDatabase, ref, set, update } from 'firebase/database';
+import { getDatabase, ref, update, get } from 'firebase/database';
 import { getAuth, signOut } from 'firebase/auth';
 
 export async function googleFirebaseLogin(): Promise<
@@ -30,7 +30,7 @@ export async function insertUserDB(
   displayName: string | null,
 ): Promise<boolean> {
   const db = getDatabase();
-  set(ref(db, 'users/' + userId), {
+  update(ref(db, 'users/' + userId), {
     email: email,
     displayName: displayName,
   });
@@ -40,4 +40,10 @@ export async function insertUserDB(
 export async function banPlayerByFirebaseID(dbID: string | undefined) {
   const db = getDatabase();
   update(ref(db, 'users/' + dbID), { banned: true });
+}
+
+export async function playerIsBanned(dbID: string | undefined) {
+  const db = getDatabase();
+  const data = await get(ref(db, 'users/' + dbID));
+  return data.val().banned ?? false;
 }

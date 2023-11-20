@@ -25,7 +25,12 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
-import { firebaseLogout, googleFirebaseLogin, insertUserDB } from '../../helpers/loginHelpers';
+import {
+  firebaseLogout,
+  googleFirebaseLogin,
+  insertUserDB,
+  playerIsBanned,
+} from '../../helpers/loginHelpers';
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
@@ -129,6 +134,15 @@ I think it should be updated to use the created id everywhere
           toast({
             title: 'Unable to join town',
             description: 'Please log in before joining a town',
+            status: 'error',
+          });
+          return;
+        }
+        const isBanned = await playerIsBanned(firebaseID);
+        if (isBanned) {
+          toast({
+            title: 'Unable to join town',
+            description: 'This account has been banned. You are no longer allowed to join a town.',
             status: 'error',
           });
           return;

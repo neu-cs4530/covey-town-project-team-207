@@ -458,27 +458,28 @@ export default class Town {
    * @returns true if theres a bad word, false otherwise
    */
   private async _performProfanityCheck(message: ChatMessage): Promise<boolean> {
-    // try {
-    //   const response = await axios.post(
-    //     'https://neutrinoapi.net/bad-word-filter',
-    //     { content: message.body },
-    //     {
-    //       headers: {
-    //         'User-ID': `${process.env.PROFANITY_API_USERNAME}`,
-    //         'API-Key': `${process.env.PROFANITY_API_TOKEN}`,
-    //       },
-    //     },
-    //   );
-    //   if (response.status !== 200) {
-    //     console.error(`Request failed with status ${response.status}`);
-    //     return false;
-    //   }
-    //   return response.data['is-bad'];
-    // } catch (error) {
-    //   console.error(`Error posting data: ${error}`);
-    //   return false;
-    // }
-    return true;
+    try {
+      const response = await axios.post(
+        'https://neutrinoapi.net/bad-word-filter',
+        { content: message.body },
+        {
+          headers: {
+            'User-ID': `${process.env.PROFANITY_API_USERNAME}`,
+            'API-Key': `${process.env.PROFANITY_API_TOKEN}`,
+          },
+        },
+      );
+      if (response.status !== 200) {
+        // eslint-disable-next-line no-console
+        console.error(`Request failed with status ${response.status}`);
+        return false;
+      }
+      return response.data['is-bad'];
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`Error posting data: ${error}`);
+      return false;
+    }
   }
 
   /**
