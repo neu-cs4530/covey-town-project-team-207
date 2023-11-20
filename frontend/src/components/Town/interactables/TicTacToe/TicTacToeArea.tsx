@@ -26,6 +26,7 @@ import { GameResult, GameStatus, InteractableID } from '../../../../types/CoveyT
 import GameAreaInteractable from '../GameArea';
 import TicTacToeLeaderboard from '../Leaderboard';
 import TicTacToeBoard from './TicTacToeBoard';
+import NewVoteKickNotificationModal from '../VoteKick/VoteKickNotificationModal';
 
 /**
  * The TicTacToeArea component renders the TicTacToe game area.
@@ -224,7 +225,7 @@ export default function TicTacToeAreaWrapper(): JSX.Element {
         <ModalContent>
           <ModalHeader>{gameArea.name}</ModalHeader>
           <ModalCloseButton />
-          <TicTacToeArea interactableID={gameArea.name} />;
+          <NewVoteKickNotificationModal username='Peter Saliba' />
         </ModalContent>
       </Modal>
     );

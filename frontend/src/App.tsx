@@ -97,6 +97,7 @@ function DebugApp(): JSX.Element {
           townsService,
         },
         userName: nanoid(),
+        firebaseID: nanoid(),
       });
       newTownController.connect().then(() => {
         setTownController(newTownController);
