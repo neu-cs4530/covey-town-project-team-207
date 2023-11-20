@@ -225,7 +225,7 @@ export default function TicTacToeAreaWrapper(): JSX.Element {
         <ModalContent>
           <ModalHeader>{gameArea.name}</ModalHeader>
           <ModalCloseButton />
-          <NewVoteKickNotificationModal username='Peter Saliba' />
+          <TicTacToeArea interactableID={gameArea.name} />;
         </ModalContent>
       </Modal>
     );
