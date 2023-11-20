@@ -307,12 +307,15 @@ describe('Town Selection', () => {
     };
     let googleLoginMock: jest.SpyInstance;
     let firebaseDbMockInsert: jest.SpyInstance;
+    let firebaseIsBanned: jest.SpyInstance;
 
     beforeAll(() => {
       googleLoginMock = jest
         .spyOn(loginHelpers, 'googleFirebaseLogin')
         .mockResolvedValue(userCreds);
       firebaseDbMockInsert = jest.spyOn(loginHelpers, 'insertUserDB').mockResolvedValue(true);
+      firebaseIsBanned = jest.spyOn(loginHelpers, 'playerIsBanned').mockResolvedValue(false);
+      firebaseIsBanned.mockClear();
       googleLoginMock.mockClear();
       firebaseDbMockInsert.mockClear();
     });
