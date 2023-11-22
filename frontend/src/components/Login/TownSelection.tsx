@@ -47,13 +47,6 @@ export default function TownSelection(): JSX.Element {
   const [firebaseID, setFirebaseID] = useState<string>(''); // the firebase id of this user
   const toast = useToast();
 
-  /*
-what other info is needed in the db? the towns that are connected to?
-the towns created?
-rn the id in the DB is created from the login process, but not used in the town process
-I think it should be updated to use the created id everywhere 
-
-  */
   // Added function to handle Google login
   const handleGoogleLogin = useCallback(async () => {
     try {

@@ -308,6 +308,7 @@ describe('Town Selection', () => {
     let googleLoginMock: jest.SpyInstance;
     let firebaseDbMockInsert: jest.SpyInstance;
     let firebaseIsBanned: jest.SpyInstance;
+    let googleLogoutMock: jest.SpyInstance;
 
     beforeAll(() => {
       googleLoginMock = jest
@@ -315,9 +316,11 @@ describe('Town Selection', () => {
         .mockResolvedValue(userCreds);
       firebaseDbMockInsert = jest.spyOn(loginHelpers, 'insertUserDB').mockResolvedValue(true);
       firebaseIsBanned = jest.spyOn(loginHelpers, 'playerIsBanned').mockResolvedValue(false);
+      googleLogoutMock = jest.spyOn(loginHelpers, 'firebaseLogout').mockResolvedValue();
       firebaseIsBanned.mockClear();
       googleLoginMock.mockClear();
       firebaseDbMockInsert.mockClear();
+      googleLogoutMock.mockClear();
     });
 
     beforeEach(async () => {
@@ -362,6 +365,16 @@ describe('Town Selection', () => {
           userEvent.click(joinTownByIDButton);
         };
 
+        it('the disconnect button calls firebase logout', async () => {
+          const logoutButton: HTMLElement = renderData.getByTestId('town-logout');
+          act(async () => {
+            await userEvent.click(logoutButton);
+          });
+          await waitFor(async () => {
+            expect(googleLogoutMock).toBeCalled();
+          });
+        });
+
         it('includes a connect button, which creates a new TownController and connects with the entered username and coveyTownID', async () => {
           const coveyTownID = nanoid();
           const userName = nanoid();
@@ -385,6 +398,7 @@ describe('Town Selection', () => {
           await waitFor(() =>
             expect(mockLoginController.setTownController).toBeCalledWith(mockedTownController),
           );
+          expect(firebaseIsBanned).toBeCalled();
         });
         it('displays an error toast "Unable to join town" if the username is empty', async () => {
           const coveyTownID = nanoid();
@@ -433,6 +447,27 @@ describe('Town Selection', () => {
             expect(mockToast).toBeCalledWith({
               description: `Error: ${errorMessage}`,
               title: 'Unable to connect to Towns Service',
+              status: 'error',
+            }),
+          );
+        });
+
+        it('displays an error toast "Unable to join town" when the player has been banned', async () => {
+          const coveyTownID = nanoid();
+          const userName = nanoid();
+
+          firebaseIsBanned.mockResolvedValueOnce(true);
+
+          await joinTownWithOptions({
+            coveyTownID,
+            userName,
+          });
+
+          // Check for call sequence
+          await waitFor(() =>
+            expect(mockToast).toBeCalledWith({
+              description: `This account has been banned. You are no longer allowed to join a town.`,
+              title: 'Unable to join town',
               status: 'error',
             }),
           );
