@@ -20,6 +20,7 @@ import {
   ToastId,
   Tr,
   useToast,
+  HStack,
 } from '@chakra-ui/react';
 import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
@@ -320,7 +321,7 @@ export default function TownSelection(): JSX.Element {
             <Heading as='h2' size='lg'>
               Log In
             </Heading>
-
+            <HStack alignItems='baseline'>
             <Button
               onClick={handleGoogleLogin}
               data-testid='town-login'
@@ -336,9 +337,11 @@ export default function TownSelection(): JSX.Element {
               isLoading={isLoggingIn}
               data-testid='town-logout'
               isDisabled={!isLoggedIn}
+              marginTop='4'
               colorScheme={'red'}>
               Logout
             </Button>
+            </HStack>
           </Box>
           <Box p='4' borderWidth='1px' borderRadius='lg'>
             <Heading as='h2' size='lg'>
