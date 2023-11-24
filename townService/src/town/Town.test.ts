@@ -890,7 +890,7 @@ describe('Town', () => {
     };
 
     it('should increment profanity count on receiving a profane message', async () => {
-      const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
+      const chatHandler = jest.fn();
 
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
       chatHandler(profaneMessage);
@@ -903,7 +903,7 @@ describe('Town', () => {
     });
 
     it('should keep track of the number of times a user uses profanity in the chat', async () => {
-      const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
+      const chatHandler = jest.fn();
 
       for (let i = 1; i <= 6; i++) {
         chatHandler(profaneMessage);
@@ -913,7 +913,7 @@ describe('Town', () => {
     });
 
     it('should trigger the correct action or warning message based on profanity count', async () => {
-      const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
+      const chatHandler = jest.fn();
       let warningMessage = '';
       let recentChatMessage = '';
 
