@@ -895,8 +895,8 @@ describe('Town', () => {
     it('should increment profanity count on receiving a profane message', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
-      // Mock the axios.post method to return a response indicating the message is profane
-      (axios.post as jest.Mock).mockResolvedValue({
+      // Spy on axios.post method to return a desired response
+      jest.spyOn(axios, 'post').mockResolvedValue({
         status: 200,
         data: { 'is-bad': true },
       });
