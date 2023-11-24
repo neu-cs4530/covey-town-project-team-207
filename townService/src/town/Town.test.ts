@@ -921,6 +921,7 @@ describe('Town', () => {
       chatHandler(profaneMessage);
       player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
+      town.handleProfanityOffenses(player, playerTestData.socket);
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
@@ -928,6 +929,7 @@ describe('Town', () => {
       chatHandler(profaneMessage);
       player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
+      town.handleProfanityOffenses(player, playerTestData.socket);
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
@@ -935,6 +937,7 @@ describe('Town', () => {
       chatHandler(profaneMessage);
       player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. A votekick will now be initiated.`;
+      town.handleProfanityOffenses(player, playerTestData.socket);
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
@@ -942,6 +945,7 @@ describe('Town', () => {
       chatHandler(profaneMessage);
       player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
+      town.handleProfanityOffenses(player, playerTestData.socket);
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
@@ -949,6 +953,7 @@ describe('Town', () => {
       chatHandler(profaneMessage);
       player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
+      town.handleProfanityOffenses(player, playerTestData.socket);
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
@@ -956,6 +961,7 @@ describe('Town', () => {
       chatHandler(profaneMessage);
       player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
+      town.handleProfanityOffenses(player, playerTestData.socket);
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
