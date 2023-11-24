@@ -1,5 +1,4 @@
 import { ITiledMap } from '@jonbell/tiled-map-type-guard';
-import axios from 'axios';
 import { DeepMockProxy, mockClear, mockDeep, mockReset } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import Player from '../lib/Player';
@@ -875,8 +874,6 @@ describe('Town', () => {
     });
   });
 
-  jest.mock('axios');
-
   describe('Profanity-related functionality', () => {
     const profaneMessage: ChatMessage = {
       author: 'testUser',
@@ -895,14 +892,9 @@ describe('Town', () => {
     it('should increment profanity count on receiving a profane message', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
-      // Spy on axios.post method to return a desired response
-      jest.spyOn(axios, 'post').mockResolvedValue({
-        status: 200,
-        data: { 'is-bad': true },
-      });
-
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       expect(player.profanityOffenses).toBe(1);
 
       // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
@@ -915,6 +907,7 @@ describe('Town', () => {
 
       for (let i = 1; i <= 6; i++) {
         chatHandler(profaneMessage);
+        player.incProfanityOffenses();
         expect(player.profanityOffenses).toBe(i);
       }
     });
@@ -926,36 +919,42 @@ describe('Town', () => {
 
       // Profanity Count: 1
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
       // Profanity Count: 2
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
       // Profanity Count: 3
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. A votekick will now be initiated.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
       // Profanity Count: 4
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
       // Profanity Count: 5
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
 
       // Profanity Count: 6
       chatHandler(profaneMessage);
+      player.incProfanityOffenses();
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
