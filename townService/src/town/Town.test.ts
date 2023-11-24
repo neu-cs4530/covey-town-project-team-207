@@ -2,6 +2,7 @@ import { ITiledMap } from '@jonbell/tiled-map-type-guard';
 import axios from 'axios';
 import { DeepMockProxy, mockClear, mockDeep, mockReset } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
+import MockAdapter from 'axios-mock-adapter';
 import Player from '../lib/Player';
 import TwilioVideo from '../lib/TwilioVideo';
 import {
@@ -877,8 +878,6 @@ describe('Town', () => {
   });
 
   describe('Profanity-related functionality', () => {
-    const mockAxios = jest.spyOn(axios, 'post') as jest.MockedFunction<typeof axios.post>;
-
     const profaneMessage: ChatMessage = {
       author: 'testUser',
       sid: 'testSid',
@@ -893,18 +892,21 @@ describe('Town', () => {
       dateCreated: new Date(),
     };
 
+    // Create a mock adapter for Axios
+    const mock = new MockAdapter(axios);
+
     it('should increment profanity count on receiving a profane message', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
-      // Mock the axios.post method to control the response
-      mockAxios.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
+      // Mock the response for the profanity filter API
+      mock.onPost('https://neutrinoapi.net/bad-word-filter').reply(200, { 'is-bad': true });
 
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
       chatHandler(profaneMessage);
       expect(player.profanityOffenses).toBe(1);
 
-      // Reset the mock implementation for subsequent tests
-      mockAxios.mockReset();
+      // Mock the response for the profanity filter API
+      mock.onPost('https://neutrinoapi.net/bad-word-filter').reply(200, { 'is-bad': false });
 
       // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
       chatHandler(cleanMessage);
@@ -914,25 +916,16 @@ describe('Town', () => {
     it('should keep track of the number of times a user uses profanity in the chat', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
-      // Mock the axios.post method to control the response
-      mockAxios.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
-
       for (let i = 1; i <= 6; i++) {
         chatHandler(profaneMessage);
         expect(player.profanityOffenses).toBe(i);
       }
-
-      // Reset the mock implementation for subsequent tests
-      mockAxios.mockReset();
     });
 
     it('should trigger the correct action or warning message based on profanity count', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
       let warningMessage = '';
       let recentChatMessage = '';
-
-      // Mock the axios.post method to control the response
-      mockAxios.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
 
       // Profanity Count: 1
       chatHandler(profaneMessage);
