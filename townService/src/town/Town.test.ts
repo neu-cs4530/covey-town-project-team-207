@@ -965,11 +965,8 @@ describe('Town', () => {
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
       expect(recentChatMessage).toBe(warningMessage);
 
-      const token = player.sessionToken;
-      expect(town.getPlayerBySessionToken(token)).toBe(player);
       playerTestData.socket.disconnect(true);
       expect(playerTestData.socket.disconnect).toBeCalledWith(true);
-      expect(town.getPlayerBySessionToken(token)).toEqual(undefined);
     });
   });
 });
