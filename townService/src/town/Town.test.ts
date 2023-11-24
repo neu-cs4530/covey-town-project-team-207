@@ -895,7 +895,7 @@ describe('Town', () => {
     it('should increment profanity count on receiving a profane message', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
-      // Mock the axios.post method to return a desired response
+      // Mock the axios.post method to return a response indicating the message is profane
       (axios.post as jest.Mock).mockResolvedValue({
         status: 200,
         data: { 'is-bad': true },
@@ -904,12 +904,6 @@ describe('Town', () => {
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
       chatHandler(profaneMessage);
       expect(player.profanityOffenses).toBe(1);
-
-      // Mock the axios.post method to return a desired response
-      (axios.post as jest.Mock).mockResolvedValue({
-        status: 200,
-        data: { 'is-bad': false },
-      });
 
       // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
       chatHandler(cleanMessage);
@@ -989,9 +983,6 @@ describe('Town', () => {
 
       // Expecting the player to be disconnected from the town after 6 offenses
       expect(playerTestData.socket.disconnect).toBeCalledWith(true);
-
-      // Restore the original axios.post implementation
-      axiosPostMock.mockRestore();
     });
   });
 });
