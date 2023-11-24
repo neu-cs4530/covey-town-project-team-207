@@ -477,7 +477,7 @@ export default class Town {
       return response.data['is-bad'];
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error(`Error posting data: ${error}`);
+      console.log(`Error posting data: ${error}`);
       return false;
     }
   }
