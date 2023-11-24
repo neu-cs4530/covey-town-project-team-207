@@ -913,37 +913,16 @@ describe('Town', () => {
     it('should keep track of the number of times a user uses profanity in the chat', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
-      // Mock the axios.post method to simulate a clean response from the profanity filter API
-      const axiosPostMock = jest.spyOn(axios, 'post');
-      axiosPostMock.mockResolvedValueOnce({
-        status: 200,
-        data: {
-          'is-bad': true,
-        },
-      });
-
       for (let i = 1; i <= 6; i++) {
         chatHandler(profaneMessage);
         expect(player.profanityOffenses).toBe(i);
       }
-
-      // Restore the original axios.post implementation
-      axiosPostMock.mockRestore();
     });
 
     it('should trigger the correct action or warning message based on profanity count', async () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
       let warningMessage = '';
       let recentChatMessage = '';
-
-      // Mock the axios.post method to simulate a clean response from the profanity filter API
-      const axiosPostMock = jest.spyOn(axios, 'post');
-      axiosPostMock.mockResolvedValueOnce({
-        status: 200,
-        data: {
-          'is-bad': true,
-        },
-      });
 
       // Profanity Count: 1
       chatHandler(profaneMessage);
