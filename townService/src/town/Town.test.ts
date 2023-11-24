@@ -902,18 +902,21 @@ describe('Town', () => {
       mock.onPost('https://neutrinoapi.net/bad-word-filter').reply(200, { 'is-bad': true });
 
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
-      chatHandler(profaneMessage);
+      await chatHandler(profaneMessage);
       expect(player.profanityOffenses).toBe(1);
+
+      // Reset the mock to clear previous expectations
+      mock.reset();
 
       // Mock the response for the profanity filter API
       mock.onPost('https://neutrinoapi.net/bad-word-filter').reply(200, { 'is-bad': false });
 
       // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
-      chatHandler(cleanMessage);
+      await chatHandler(cleanMessage);
       expect(player.profanityOffenses).toBe(1);
     });
 
-    it('should keep track of the number of times a user uses profanity in the chat', async () => {
+    it('should keep track of the number of times a user uses profanity in the chat', () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
       for (let i = 1; i <= 6; i++) {
@@ -922,7 +925,7 @@ describe('Town', () => {
       }
     });
 
-    it('should trigger the correct action or warning message based on profanity count', async () => {
+    it('should trigger the correct action or warning message based on profanity count', () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
       let warningMessage = '';
       let recentChatMessage = '';
@@ -965,6 +968,11 @@ describe('Town', () => {
 
       // Expecting the player to be disconnected from the town after 6 offenses
       expect(playerTestData.socket.disconnect).toBeCalledWith(true);
+    });
+
+    // Reset the mock after each test
+    afterEach(() => {
+      mock.reset();
     });
   });
 });
