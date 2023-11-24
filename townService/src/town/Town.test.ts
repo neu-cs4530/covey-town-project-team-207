@@ -877,8 +877,7 @@ describe('Town', () => {
   });
 
   describe('Profanity-related functionality', () => {
-    jest.mock('axios');
-    const mockAxios = axios as jest.Mocked<typeof axios>;
+    const mockAxios = jest.spyOn(axios, 'post') as jest.MockedFunction<typeof axios.post>;
 
     const profaneMessage: ChatMessage = {
       author: 'testUser',
@@ -898,14 +897,14 @@ describe('Town', () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
       // Mock the axios.post method to control the response
-      mockAxios.post.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
+      mockAxios.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
 
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
       chatHandler(profaneMessage);
       expect(player.profanityOffenses).toBe(1);
 
       // Reset the mock implementation for subsequent tests
-      mockAxios.post.mockReset();
+      mockAxios.mockReset();
 
       // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
       chatHandler(cleanMessage);
@@ -916,7 +915,7 @@ describe('Town', () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
       // Mock the axios.post method to control the response
-      mockAxios.post.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
+      mockAxios.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
 
       for (let i = 1; i <= 6; i++) {
         chatHandler(profaneMessage);
@@ -924,7 +923,7 @@ describe('Town', () => {
       }
 
       // Reset the mock implementation for subsequent tests
-      mockAxios.post.mockReset();
+      mockAxios.mockReset();
     });
 
     it('should trigger the correct action or warning message based on profanity count', async () => {
@@ -933,7 +932,7 @@ describe('Town', () => {
       let recentChatMessage = '';
 
       // Mock the axios.post method to control the response
-      mockAxios.post.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
+      mockAxios.mockResolvedValue({ status: 200, data: { 'is-bad': true } });
 
       // Profanity Count: 1
       chatHandler(profaneMessage);
@@ -946,9 +945,6 @@ describe('Town', () => {
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
-
-      // Reset the mock implementation for subsequent tests
-      mockAxios.post.mockReset();
 
       // Profanity Count: 3
       chatHandler(profaneMessage);
@@ -967,9 +963,6 @@ describe('Town', () => {
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
       recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
       expect(recentChatMessage).toBe(warningMessage);
-
-      // Reset the mock implementation for subsequent tests
-      mockAxios.post.mockReset();
 
       // Profanity Count: 6
       chatHandler(profaneMessage);
