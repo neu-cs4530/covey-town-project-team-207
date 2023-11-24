@@ -874,4 +874,87 @@ describe('Town', () => {
       });
     });
   });
+
+  describe('Profanity-related functionality', () => {
+    const profaneMessage: ChatMessage = {
+      author: 'testUser',
+      sid: 'testSid',
+      body: 'This contains a profane message: shit',
+      dateCreated: new Date(),
+    };
+
+    const cleanMessage: ChatMessage = {
+      author: 'testUser',
+      sid: 'testSid',
+      body: 'This does not contain a profane message.',
+      dateCreated: new Date(),
+    };
+
+    it('should check for profanity in chat messages', async () => {
+      const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
+      chatHandler(profaneMessage);
+
+      // Simulate a profane message from the player, expecting the player's profanity count to be incremented
+      chatHandler(profaneMessage);
+      expect(player.profanityOffenses).toBe(1);
+
+      // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
+      chatHandler(cleanMessage);
+      expect(player.profanityOffenses).toBe(1);
+    });
+
+    it('should keep track of the number of times a user uses profanity in the chat', async () => {
+      const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
+
+      for (let i = 1; i <= 6; i++) {
+        chatHandler(profaneMessage);
+        expect(player.profanityOffenses).toBe(i);
+      }
+    });
+
+    it('should trigger the correct action or warning message based on profanity count', async () => {
+      const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
+      let warningMessage = '';
+      let recentChatMessage = '';
+
+      // Profanity Count: 1
+      chatHandler(profaneMessage);
+      warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
+      recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
+      expect(recentChatMessage).toBe(warningMessage);
+
+      // Profanity Count: 2
+      chatHandler(profaneMessage);
+      warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
+      recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
+      expect(recentChatMessage).toBe(warningMessage);
+
+      // Profanity Count: 3
+      chatHandler(profaneMessage);
+      warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. A votekick will now be initiated.`;
+      recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
+      expect(recentChatMessage).toBe(warningMessage);
+
+      // Profanity Count: 4
+      chatHandler(profaneMessage);
+      warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
+      recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
+      expect(recentChatMessage).toBe(warningMessage);
+
+      // Profanity Count: 5
+      chatHandler(profaneMessage);
+      warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
+      recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
+      expect(recentChatMessage).toBe(warningMessage);
+
+      // Profanity Count: 6
+      chatHandler(profaneMessage);
+      warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
+      recentChatMessage = getLastEmittedEvent(playerTestData.socket, 'chatMessage').body;
+      expect(recentChatMessage).toBe(warningMessage);
+
+      // Expecting the player to be disconnected from the town after 6 offenses
+      expect(playerTestData.socket.disconnect).toBeCalledWith(true);
+    });
+  });
 });
