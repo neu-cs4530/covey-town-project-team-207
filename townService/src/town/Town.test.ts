@@ -896,10 +896,14 @@ describe('Town', () => {
 
       // Simulate a profane message from the player, expecting the player's profanity count to be incremented
       chatHandler(profaneMessage);
+      const hasProfanity = await town._performProfanityCheck(profaneMessage);
+      expect(hasProfanity).toBe(true);
       expect(player.profanityOffenses).toBe(1);
 
       // Simulate a clean message from the player, expecting the player's profanity count to remain unchanged
       chatHandler(cleanMessage);
+      const hasProfanityClean = await town._performProfanityCheck(cleanMessage);
+      expect(hasProfanityClean).toBe(false);
       expect(player.profanityOffenses).toBe(1);
     });
 
@@ -907,7 +911,8 @@ describe('Town', () => {
       const chatHandler = getEventListener(playerTestData.socket, 'chatMessage');
 
       for (let i = 1; i <= 6; i++) {
-        chatHandler(profaneMessage);
+        // eslint-disable-next-line no-await-in-loop
+        await chatHandler(profaneMessage);
         expect(player.profanityOffenses).toBe(i);
       }
     });
