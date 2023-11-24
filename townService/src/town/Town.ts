@@ -457,7 +457,7 @@ export default class Town {
    * @param message the message to check
    * @returns true if theres a bad word, false otherwise
    */
-  public async _performProfanityCheck(message: ChatMessage): Promise<boolean> {
+  private async _performProfanityCheck(message: ChatMessage): Promise<boolean> {
     try {
       const response = await axios.post(
         'https://neutrinoapi.net/bad-word-filter',
