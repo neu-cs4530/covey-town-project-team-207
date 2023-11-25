@@ -147,7 +147,7 @@ export default class Town {
         );
         assert(offendingPlayer);
         offendingPlayer.incProfanityOffenses();
-        this._handleProfanityOffenses(offendingPlayer, socket);
+        this.handleProfanityOffenses(offendingPlayer, socket);
         // eslint-disable-next-line no-console
         console.log(
           `Message from ${offendingPlayer.userName} found to have profanity. The message was ${message.body}. This was the players ${offendingPlayer.profanityOffenses} offense`,
@@ -476,8 +476,6 @@ export default class Town {
       }
       return response.data['is-bad'];
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(`Error posting data: ${error}`);
       return false;
     }
   }
@@ -491,7 +489,7 @@ export default class Town {
    * 6:     trigger kick from town
    * @param offendingPlayer the player that has been flagged for profanity
    */
-  private _handleProfanityOffenses(offendingPlayer: Player, socket: CoveyTownSocket) {
+  public handleProfanityOffenses(offendingPlayer: Player, socket: CoveyTownSocket) {
     let message = '';
 
     // Set the message based on the number of offenses
