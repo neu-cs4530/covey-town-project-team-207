@@ -401,7 +401,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     this._socket.on('playerDisconnect', disconnectedPlayer => {
       this._players = this.players.filter(eachPlayer => eachPlayer.id !== disconnectedPlayer.id);
       if (disconnectedPlayer.id === this._ourPlayer?.id) {
-        this._kickOurPlayer();
+        this.kickOurPlayer();
       }
     });
     /**
@@ -708,7 +708,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return this._playersInternal.filter(eachPlayer => playerIDs.includes(eachPlayer.id));
   }
 
-  private _kickOurPlayer(): void {
+  public kickOurPlayer(): void {
     banPlayerByFirebaseID(this._firebaseID);
     this.disconnect();
   }

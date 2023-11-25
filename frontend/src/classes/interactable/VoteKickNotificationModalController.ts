@@ -1,6 +1,9 @@
 import TownController from '../TownController';
 import VoteKick from '../../../../townService/src/town/VoteKick';
 
+/**
+ * Controller for the vote kick notification modal, used to record and apply votes at the end of a vote kick
+ */
 export default class VoteKickNotificationModalController {
   protected _townController: TownController;
 
@@ -11,19 +14,45 @@ export default class VoteKickNotificationModalController {
     this._model = model;
   }
 
+  /**
+   * Records a vote by adding the player's vote to the model
+   * @param vote - true if the player votes to kick the player, false if the player votes to not kick the player
+   */
   public recordVote(vote: boolean): void {
-    throw Error('VoteKickNotificationModalController method recordVote not implemented');
+    this._model.addVote(this._townController.ourPlayer.id, vote);
   }
 
+  /**
+   * Checks if the vote kick is done
+   * @returns true if the vote kick is done, false otherwise
+   */
   public isVotingDone(): boolean {
-    throw Error('VoteKickNotificationModalController method isVotingDone not implemented');
+    const numPlayers = this._townController.players.length;
+    let numKickVotes = 0;
+    let numNoKickVotes = 0;
+    this._townController.players.forEach(player => {
+      if (numKickVotes > numPlayers / 2 || numNoKickVotes > numPlayers / 2) {
+        return true;
+      } else if (this._model.hasVoted(player.id)) {
+        numKickVotes++;
+      } else {
+        numNoKickVotes++;
+      }
+    });
+    return false;
   }
 
-  public endVote(): void {
-    throw Error('VoteKickNotificationModalController method endVote not implemented');
-  }
-
-  public applyVote(): void {
-    throw Error('VoteKickNotificationModalController method applyVote not implemented');
+  /**
+   * Applies the vote kick, kicking the player if the vote is successful
+   * @returns true if the vote kick is successful, false otherwise
+   */
+  public applyVote(): boolean {
+    if (this._model.voteKickSuccessful()) {
+      if (this._townController.ourPlayer.id === this._model.playerIDToKick) {
+        this._townController.kickOurPlayer();
+      }
+      return true;
+    }
+    return false;
   }
 }

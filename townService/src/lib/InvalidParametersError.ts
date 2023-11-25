@@ -11,6 +11,8 @@ export const MOVE_NOT_YOUR_TURN_MESSAGE = 'Not your turn';
 
 export const PLAYER_NOT_IN_GAME_MESSAGE = 'Player is not in this game';
 export const PLAYER_ALREADY_IN_GAME_MESSAGE = 'Player is already in this game';
+
+export const PLAYER_ALREADY_VOTED_MESSAGE = 'Player has already voted';
 export default class InvalidParametersError extends Error {
   public message: string;
 
