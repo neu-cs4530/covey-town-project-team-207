@@ -27,14 +27,14 @@ describe('Button to vote in disfavor of kicking the player', () => {
 describe('NewVoteKickNotificationModal', () => {
   jest.setTimeout(15000);
   it('should render with the correct initial values', () => {
-    render(<NewVoteKickNotificationModal username='Andrew' />);
+    renderVoteKickNotificationModal();
     expect(screen.getByText(/Disruptive user identified, votekick for/)).toBeInTheDocument();
     expect(screen.getByText(/Andrew/)).toBeInTheDocument();
     expect(screen.getByText(/occuring in:/)).toBeInTheDocument();
     expect(screen.getByText(/10 seconds/)).toBeInTheDocument();
   });
   it('should count down the timer correctly', async () => {
-    render(<NewVoteKickNotificationModal username='Andrew' />);
+    renderVoteKickNotificationModal();
     expect(screen.getByText(/10 seconds/)).toBeInTheDocument();
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 1100));
@@ -46,7 +46,7 @@ describe('NewVoteKickNotificationModal', () => {
     expect(screen.getByText(/3 seconds/)).toBeInTheDocument();
   });
   it('should close when timer hits 0', async () => {
-    render(<NewVoteKickNotificationModal username='Andrew' />);
+    renderVoteKickNotificationModal();
     expect(screen.getByText(/10 seconds/)).toBeInTheDocument();
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 10500));
