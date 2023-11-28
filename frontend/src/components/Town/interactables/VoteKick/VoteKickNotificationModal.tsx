@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import VoteKickNotificationModalController from '../../../../classes/interactable/VoteKickNotificationModalController';
+import PlayerController from '../../../../classes/PlayerController';
 import useTownController from '../../../../hooks/useTownController';
 
 export default function VoteKickNotificationModal({
