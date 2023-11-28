@@ -526,6 +526,7 @@ export default class Town {
     // Initiate a votekick on the offending player on their third offense
     if (offendingPlayer.profanityOffenses === 3) {
       // Initiate votekick
+      this._broadcastEmitter.emit('playerVoteKick', offendingPlayer.toPlayerModel());
     }
 
     // Remove the offending player on their third offense after the votekick has failed
