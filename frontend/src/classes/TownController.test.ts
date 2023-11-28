@@ -458,6 +458,14 @@ describe('TownController', () => {
         PlayerController.fromPlayerModel(testPlayer),
       );
     });
+    it('Emits playerVoteKick events when a disruptive user is detected', async () => {
+      emitEventAndExpectListenerFiring(
+        'playerVoteKick',
+        testPlayer,
+        'playerVoteKick',
+        PlayerController.fromPlayerModel(testPlayer),
+      );
+    });
   });
   it('Disconnects the socket and clears the coveyTownController when disconnection', async () => {
     emitEventAndExpectListenerFiring('townClosing', undefined, 'disconnect');

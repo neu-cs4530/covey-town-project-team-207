@@ -924,6 +924,7 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(() => getLastEmittedEvent(townEmitter, 'playerVoteKick')).toThrowError();
 
       // Profanity Count: 2
       chatHandler(profaneMessage);
@@ -932,6 +933,7 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(() => getLastEmittedEvent(townEmitter, 'playerVoteKick')).toThrowError();
 
       // Profanity Count: 3
       chatHandler(profaneMessage);
@@ -940,6 +942,8 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. A votekick will now be initiated.`;
       expect(recentChatMessage).toBe(warningMessage);
+      // the town should emit an event indicating that the votekick should be initiated only on the third offense
+      getLastEmittedEvent(townEmitter, 'playerVoteKick');
 
       // Profanity Count: 4
       chatHandler(profaneMessage);
