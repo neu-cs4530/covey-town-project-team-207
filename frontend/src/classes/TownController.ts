@@ -26,6 +26,7 @@ import {
   PlayerLocation,
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
+  VoteResponse,
 } from '../types/CoveyTownSocket';
 import { isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
@@ -79,6 +80,7 @@ export type TownEvents = {
 
   playerVoteKick: (offendingPlayer: PlayerController) => void;
 
+  voteResponse: (VoteResponse: VoteResponse) => void;
   /**
    * An event that indicates that the set of active interactable areas has changed. This event is dispatched
    * after updating the set of interactable areas - the new set of interactable areas can be found on the TownController.
@@ -427,10 +429,12 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
     /** When a player has three offenses of using inappropriate words, emit an event to the controller's event listeners */
     this._socket.on('playerVoteKick', voteKickPlayer => {
-      const playerToUpdate = this.players.find(eachPlayer => eachPlayer.id === voteKickPlayer.id);
-      if (playerToUpdate) {
-        this.emit('playerVoteKick', playerToUpdate);
-      }
+      console.log('heard vote kick off, sending stub response back');
+      this._socket.emit('voteResponse', {
+        fromPlayer: this.ourPlayer.id,
+        offendingPlayer: voteKickPlayer.id,
+        voteToRemove: true,
+      });
     });
 
     /**

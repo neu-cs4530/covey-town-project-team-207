@@ -1,6 +1,7 @@
 import InvalidParametersError, {
   PLAYER_ALREADY_VOTED_MESSAGE,
 } from '../lib/InvalidParametersError';
+import Player from '../lib/Player';
 import { PlayerID } from '../types/CoveyTownSocket';
 
 /**
@@ -9,11 +10,16 @@ import { PlayerID } from '../types/CoveyTownSocket';
 export default class VoteKick {
   protected _votes: { [playerID: PlayerID]: boolean };
 
-  public _playerIDToKick: PlayerID;
-
-  public constructor(playerIDToKick: PlayerID) {
+  public constructor() {
     this._votes = {};
-    this._playerIDToKick = playerIDToKick;
+  }
+
+  public set playerIDToKick(player: PlayerID) {
+    this.playerIDToKick = player;
+  }
+
+  public get playerIDToKick(): PlayerID {
+    return 'test';
   }
 
   /**
@@ -26,9 +32,6 @@ export default class VoteKick {
   /**
    * Getter for the player ID to kick
    */
-  public get playerIDToKick(): PlayerID {
-    return this._playerIDToKick;
-  }
 
   /**
    * Adds a vote to the private votes dictionary, throws an error if the player has already voted
@@ -36,7 +39,7 @@ export default class VoteKick {
    * @param vote true if the player votes to kick the player, false if the player votes to not kick the player
    */
   public addVote(playerID: PlayerID, vote: boolean): void {
-    if (this._votes[playerID] !== undefined) {
+    if (this._votes[playerID] === undefined) {
       this._votes[playerID] = vote;
     } else {
       throw new InvalidParametersError(PLAYER_ALREADY_VOTED_MESSAGE);

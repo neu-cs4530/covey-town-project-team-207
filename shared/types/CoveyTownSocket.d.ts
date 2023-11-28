@@ -205,6 +205,12 @@ export type InteractableCommandResponse<MessageType> = {
   payload?: InteractableCommandResponseMap[MessageType];
 }
 
+export type VoteResponse = {
+  fromPlayer: PlayerID,
+  offendingPlayer: PlayerID,
+  voteToRemove: boolean,
+}
+
 export interface ServerToClientEvents {
   playerMoved: (movedPlayer: Player) => void;
   playerDisconnect: (disconnectedPlayer: Player) => void;
@@ -223,4 +229,5 @@ export interface ClientToServerEvents {
   playerMovement: (movementData: PlayerLocation) => void;
   interactableUpdate: (update: Interactable) => void;
   interactableCommand: (command: InteractableCommand & InteractableCommandBase) => void;
+  voteResponse: (voteResponse: VoteResponse) => void;
 }

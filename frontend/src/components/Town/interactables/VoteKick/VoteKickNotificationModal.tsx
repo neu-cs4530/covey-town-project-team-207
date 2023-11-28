@@ -10,8 +10,6 @@ import {
   Button,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import VoteKick from '../../../../../../townService/src/town/VoteKick';
-import VoteKickNotificationModalController from '../../../../classes/interactable/VoteKickNotificationModalController';
 import PlayerController from '../../../../classes/PlayerController';
 import useTownController from '../../../../hooks/useTownController';
 
@@ -19,19 +17,17 @@ export default function VoteKickNotificationModal(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const townController = useTownController();
   const [playerToKick, setPlayerToKick] = useState<string>('');
-  const [controller, setController] = useState(new VoteKickNotificationModalController(townController, new VoteKick(playerToKick)));
 
   useEffect(() => {
     const handleVoteKick = (offendingPlayer: PlayerController) => {
       onOpen();
       setPlayerToKick(offendingPlayer.userName);
-      setController(new VoteKickNotificationModalController(townController, new VoteKick(playerToKick)));
     };
     townController.addListener('playerVoteKick', handleVoteKick);
     return () => {
       townController.removeListener('playerVoteKick', handleVoteKick);
     };
-  }, [townController]);
+  }, [onOpen, townController]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

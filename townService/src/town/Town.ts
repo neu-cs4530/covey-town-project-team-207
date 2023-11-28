@@ -19,12 +19,14 @@ import {
   ServerToClientEvents,
   SocketData,
   ViewingArea as ViewingAreaModel,
+  VoteResponse,
 } from '../types/CoveyTownSocket';
 import { logError } from '../Utils';
 import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
 import ViewingArea from './ViewingArea';
+import VoteKick from './VoteKick';
 
 /**
  * The Town class implements the logic for each town: managing the various events that
@@ -95,6 +97,8 @@ export default class Town {
 
   private _connectedSockets: Set<CoveyTownSocket> = new Set();
 
+  private _voteKick: VoteKick = new VoteKick();
+
   constructor(
     friendlyName: string,
     isPubliclyListed: boolean,
@@ -140,8 +144,8 @@ export default class Town {
     // actions are triggered based on the number of profanity offenses
     socket.on('chatMessage', async (message: ChatMessage) => {
       this._broadcastEmitter.emit('chatMessage', message);
-      const hasProfanity = await this._performProfanityCheck(message);
-      if (hasProfanity) {
+      //const hasProfanity = await this._performProfanityCheck(message);
+      if (true) {
         const offendingPlayer: Player | undefined = this.players.find(
           player => player.userName === message.author,
         );
@@ -153,6 +157,12 @@ export default class Town {
           `Message from ${offendingPlayer.userName} found to have profanity. The message was ${message.body}. This was the players ${offendingPlayer.profanityOffenses} offense`,
         );
       }
+    });
+
+    // when we hear a response from a front end client, make the nessaray changes to the votekick instance 
+    socket.on('voteResponse', (voteResponse: VoteResponse) => {
+      console.log('heard vote reponse from front end client');
+      this._handleVoteResponse(voteResponse);
     });
 
     // Register an event listener for the client socket: if the client updates their
@@ -526,6 +536,11 @@ export default class Town {
     // Initiate a votekick on the offending player on their third offense
     if (offendingPlayer.profanityOffenses === 3) {
       // Initiate votekick
+      console.log('2');
+      if (!this._voteKick.playerIDToKick) {
+        console.log('1');
+        this._voteKick.playerIDToKick = offendingPlayer.id;
+      }
       this._broadcastEmitter.emit('playerVoteKick', offendingPlayer.toPlayerModel());
     }
 
@@ -534,5 +549,13 @@ export default class Town {
       // Remove player
       this._removePlayer(offendingPlayer);
     }
+  }
+
+  private _handleVoteResponse(voteResponse: VoteResponse) {
+    console.log(`heard vote response from ${voteResponse.fromPlayer} `);
+    this._voteKick.addVote(voteResponse.fromPlayer, voteResponse.voteToRemove);
+    const voteSuccessful = this._voteKick.voteKickSuccessful();
+    console.log(voteSuccessful);
+    // todo how to know when everyone has voted?
   }
 }
