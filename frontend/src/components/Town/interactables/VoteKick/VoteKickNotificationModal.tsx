@@ -51,7 +51,7 @@ export default function VoteKickNotificationModal(): JSX.Element {
               controller.recordVote(true);
               onClose();
             }}>
-            Don&apos;t Kick
+            Kick
           </Button>
           <Button
             colorScheme='red'
@@ -59,7 +59,7 @@ export default function VoteKickNotificationModal(): JSX.Element {
               controller.recordVote(false);
               onClose();
             }}>
-            Kick
+            Don&apos;t Kick
           </Button>
         </ModalFooter>
       </ModalContent>
