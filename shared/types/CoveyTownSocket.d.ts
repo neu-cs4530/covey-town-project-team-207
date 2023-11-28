@@ -209,6 +209,7 @@ export interface ServerToClientEvents {
   playerMoved: (movedPlayer: Player) => void;
   playerDisconnect: (disconnectedPlayer: Player) => void;
   playerJoined: (newPlayer: Player) => void;
+  playerVoteKick: (offendingPlayer: Player) => void;
   initialize: (initialData: TownJoinResponse) => void;
   townSettingsUpdated: (update: TownSettingsUpdate) => void;
   townClosing: () => void;
