@@ -1,7 +1,6 @@
 import {
   Modal,
   ModalBody,
-  ModalCloseButton,
   ModalContent,
   ModalHeader,
   ModalOverlay,
@@ -9,7 +8,6 @@ import {
   Text,
   ModalFooter,
   Button,
-  useToast,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import VoteKickNotificationModalController from '../../../../classes/interactable/VoteKickNotificationModalController';
