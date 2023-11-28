@@ -36,7 +36,7 @@ export default class VoteKick {
    * @param vote true if the player votes to kick the player, false if the player votes to not kick the player
    */
   public addVote(playerID: PlayerID, vote: boolean): void {
-    if (this._votes[playerID] !== undefined) {
+    if (this._votes[playerID] === undefined) {
       this._votes[playerID] = vote;
     } else {
       throw new InvalidParametersError(PLAYER_ALREADY_VOTED_MESSAGE);
