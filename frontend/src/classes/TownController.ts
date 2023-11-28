@@ -77,6 +77,8 @@ export type TownEvents = {
    */
   playerMoved: (movedPlayer: PlayerController) => void;
 
+  playerVoteKick: (offendingPlayer: PlayerController) => void;
+
   /**
    * An event that indicates that the set of active interactable areas has changed. This event is dispatched
    * after updating the set of interactable areas - the new set of interactable areas can be found on the TownController.
@@ -420,6 +422,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           playerToUpdate.location = movedPlayer.location;
         }
         this.emit('playerMoved', playerToUpdate);
+      }
+    });
+
+    /** When a player has three offenses of using inappropriate words, emit an event to the controller's event listeners */
+    this._socket.on('playerVoteKick', voteKickPlayer => {
+      const playerToUpdate = this.players.find(eachPlayer => eachPlayer.id === voteKickPlayer.id);
+      if (playerToUpdate) {
+        this.emit('playerVoteKick', playerToUpdate);
       }
     });
 
