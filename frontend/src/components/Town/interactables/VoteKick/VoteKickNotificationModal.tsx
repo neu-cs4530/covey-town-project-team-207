@@ -10,25 +10,22 @@ import {
   Button,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
+import VoteKick from '../../../../../../townService/src/town/VoteKick';
 import VoteKickNotificationModalController from '../../../../classes/interactable/VoteKickNotificationModalController';
 import PlayerController from '../../../../classes/PlayerController';
 import useTownController from '../../../../hooks/useTownController';
 
-export default function VoteKickNotificationModal({
-  username,
-  controller,
-}: {
-  username: string;
-  controller: VoteKickNotificationModalController 
-}): JSX.Element {
+export default function VoteKickNotificationModal(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const townController = useTownController();
   const [playerToKick, setPlayerToKick] = useState<string>('');
+  const [controller, setController] = useState(new VoteKickNotificationModalController(townController, new VoteKick(playerToKick)));
 
   useEffect(() => {
     const handleVoteKick = (offendingPlayer: PlayerController) => {
       onOpen();
       setPlayerToKick(offendingPlayer.userName);
+      setController(new VoteKickNotificationModalController(townController, new VoteKick(playerToKick)));
     };
     townController.addListener('playerVoteKick', handleVoteKick);
     return () => {
@@ -40,10 +37,10 @@ export default function VoteKickNotificationModal({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Votekick for {username}</ModalHeader>
+        <ModalHeader>Votekick for {playerToKick}</ModalHeader>
         <ModalBody>
           <Text>
-            User {username} has said inappropriate language multiple times. Please vote to kick or not kick them from the town.
+            User {playerToKick} has said inappropriate language multiple times. Please vote to kick or not kick them from the town.
           </Text>
         </ModalBody>
 
