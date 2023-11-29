@@ -82,7 +82,7 @@ export default class VoteKick {
       } else if (this.hasVoted(player.id) && !this._votes[player.id]) {
         numNoKickVotes++;
       }
-      if (numKickVotes > numPlayers / 2 || numNoKickVotes > numPlayers / 2) {
+      if (numKickVotes > numPlayers / 2 || numNoKickVotes >= numPlayers / 2) {
         votingDone = true;
       }
     });
