@@ -24,6 +24,7 @@ export default function VotekickNotificationModal(): JSX.Element {
 
   useEffect(() => {
     const handleInitializeVotekick = (offendingPlayerData: OffendingPlayerData) => {
+      setHasVoted(false);
       setPlayerToKickName(offendingPlayerData.offendingPlayerName);
       setPlayerToKickID(offendingPlayerData.offendingPlayerID);
       onOpen();
