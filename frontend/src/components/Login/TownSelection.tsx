@@ -322,25 +322,25 @@ export default function TownSelection(): JSX.Element {
               Log In
             </Heading>
             <HStack alignItems='baseline'>
-            <Button
-              onClick={handleGoogleLogin}
-              data-testid='town-login'
-              isLoading={isLoggingIn}
-              isDisabled={isLoggedIn}
-              colorScheme={isLoggedIn ? 'green' : 'blue'}
-              marginTop='4'>
-              {isLoggedIn ? `Logged in as ${userName}` : 'Log in with Google'}
-            </Button>
-            <Spacer />
-            <Button
-              onClick={handleGoogleLogout}
-              isLoading={isLoggingIn}
-              data-testid='town-logout'
-              isDisabled={!isLoggedIn}
-              marginTop='4'
-              colorScheme={'red'}>
-              Logout
-            </Button>
+              <Button
+                onClick={handleGoogleLogin}
+                data-testid='town-login'
+                isLoading={isLoggingIn}
+                isDisabled={isLoggedIn}
+                colorScheme={isLoggedIn ? 'green' : 'blue'}
+                marginTop='4'>
+                {isLoggedIn ? `Logged in as ${userName}` : 'Log in with Google'}
+              </Button>
+              <Spacer />
+              <Button
+                onClick={handleGoogleLogout}
+                isLoading={isLoggingIn}
+                data-testid='town-logout'
+                isDisabled={!isLoggedIn}
+                marginTop='4'
+                colorScheme={'red'}>
+                Logout
+              </Button>
             </HStack>
           </Box>
           <Box p='4' borderWidth='1px' borderRadius='lg'>

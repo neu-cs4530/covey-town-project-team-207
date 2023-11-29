@@ -162,7 +162,6 @@ export default class Town {
 
     // when we hear a response from a front end client, make the necessary changes to the votekick instance
     socket.on('sendVote', (voteResponse: VoteResponse) => {
-      console.log('heard vote reponse from front end client');
       this._handleVoteResponse(voteResponse);
     });
 
@@ -554,15 +553,25 @@ export default class Town {
     }
   }
 
+  /**
+   * Handles the vote responses from clients. Updates the voteKick model, and sends a chat message with the result of the vote when the vote finishes
+   * @param voteResponse the clients vote
+   */
   private _handleVoteResponse(voteResponse: VoteResponse) {
     assert(this._votekickModel);
-    console.log(`heard vote response from ${voteResponse.fromPlayer} `);
     this._votekickModel.addVote(voteResponse.fromPlayer, voteResponse.voteToRemove);
     if (this._votekickModel.isVotingDone(this._players)) {
-      console.log('voting will now end');
       this._broadcastEmitter.emit('applyVotekick', {
         offendingPlayerID: voteResponse.offendingPlayerID,
         kick: this._votekickModel.voteKickSuccessful(),
+      });
+      this._broadcastEmitter.emit('chatMessage', {
+        author: 'System',
+        body: `Votekick for player ${this._votekickModel.playerToKick.userName} has ${
+          this._votekickModel.voteKickSuccessful() ? 'passed, removing player' : 'failed'
+        }`,
+        sid: nanoid(),
+        dateCreated: new Date(),
       });
       this._votekickModel = null;
     }
