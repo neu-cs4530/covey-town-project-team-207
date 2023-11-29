@@ -48,11 +48,15 @@ export default class VoteKickNotificationModalController {
    */
   public applyVote(): boolean {
     if (this._model.voteKickSuccessful()) {
-      if (this._townController.ourPlayer.id === this._model.playerIDToKick) {
+      if (this._townController.ourPlayer.id === this._model.playerToKick.id) {
         this._townController.kickOurPlayer();
       }
       return true;
     }
     return false;
+  }
+
+  public playerToKickName(): string {
+    return this._model.playerToKick.userName;
   }
 }

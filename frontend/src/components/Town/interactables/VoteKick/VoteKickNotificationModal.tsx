@@ -9,27 +9,31 @@ import {
   ModalFooter,
   Button,
 } from '@chakra-ui/react';
+import assert from 'assert';
 import React, { useEffect, useState } from 'react';
-import VoteKick from '../../../../../../townService/src/town/VoteKick';
-import VoteKickNotificationModalController from '../../../../classes/interactable/VoteKickNotificationModalController';
-import PlayerController from '../../../../classes/PlayerController';
 import useTownController from '../../../../hooks/useTownController';
+import { OffendingPlayerData, PlayerID } from '../../../../types/CoveyTownSocket';
 
-export default function VoteKickNotificationModal(): JSX.Element {
+export default function VotekickNotificationModal(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const townController = useTownController();
-  const [playerToKick, setPlayerToKick] = useState<string>('');
-  const [controller, setController] = useState(new VoteKickNotificationModalController(townController, new VoteKick(playerToKick)));
+  const [playerToKickName, setPlayerToKickName] = useState<string | null>(null);
+  const [playerToKickID, setPlayerToKickID] = useState<PlayerID | null>(null);
 
   useEffect(() => {
-    const handleVoteKick = (offendingPlayer: PlayerController) => {
+    const handleInitializeVotekick = (offendingPlayerData: OffendingPlayerData) => {
+      setPlayerToKickName(offendingPlayerData.offendingPlayerName);
+      setPlayerToKickID(offendingPlayerData.offendingPlayerID);
       onOpen();
-      setPlayerToKick(offendingPlayer.userName);
-      setController(new VoteKickNotificationModalController(townController, new VoteKick(playerToKick)));
     };
-    townController.addListener('playerVoteKick', handleVoteKick);
+    const handleEndVotekick = () => {
+      onClose();
+    };
+    townController.addListener('initializeVotekick', handleInitializeVotekick);
+    townController.addListener('endVotekick', handleEndVotekick);
     return () => {
-      townController.removeListener('playerVoteKick', handleVoteKick);
+      townController.removeListener('initializeVotekick', handleInitializeVotekick);
+      townController.removeListener('endVotekick', handleEndVotekick);
     };
   }, [townController]);
 
@@ -37,10 +41,10 @@ export default function VoteKickNotificationModal(): JSX.Element {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Votekick for {playerToKick}</ModalHeader>
+        <ModalHeader>Votekick for {playerToKickName}</ModalHeader>
         <ModalBody>
           <Text>
-            User {playerToKick} has said inappropriate language multiple times. Please vote to kick or not kick them from the town.
+            User {playerToKickName} has said inappropriate language multiple times. Please vote to kick or not kick them from the town.
           </Text>
         </ModalBody>
 
@@ -48,16 +52,18 @@ export default function VoteKickNotificationModal(): JSX.Element {
           <Button
             colorScheme='green'
             onClick={() => {
-              controller.recordVote(true);
-              onClose();
+              assert(playerToKickName);
+              assert(playerToKickID);
+              townController.emitVote(playerToKickID, true);
             }}>
             Kick
           </Button>
           <Button
             colorScheme='red'
             onClick={() => {
-              controller.recordVote(false);
-              onClose();
+              assert(playerToKickName);
+              assert(playerToKickID);
+              townController.emitVote(playerToKickID, false);
             }}>
             Don&apos;t Kick
           </Button>
