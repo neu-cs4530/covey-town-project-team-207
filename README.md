@@ -73,6 +73,6 @@ Each chat message sent by a user is checked for profanity using neutrino's filte
 
 If the player is flagged for using profanity for a third time, a vote kick will be initiated. All other players in the town have the ability to vote the offending player out of the town. If a majority of players vote to remove the player, the user will be kicked from the town and be banned from joining any Covey.Town town again. 
 
-//TODO Screenshots of votekick modal 
+![voteKick](docs/votekickModal.png)
 
 If a player is not removed as a result of the vote, they stay in the game. However, if they use profanity in chat 3 more times, they will be automatically kicked and banned from rejoining any town. They will not be able to use their google account to join any town in the future. 

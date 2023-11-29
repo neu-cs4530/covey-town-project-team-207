@@ -8,6 +8,7 @@ import {
   Text,
   ModalFooter,
   Button,
+  Spacer,
 } from '@chakra-ui/react';
 import assert from 'assert';
 import React, { useEffect, useState } from 'react';
@@ -58,6 +59,7 @@ export default function VotekickNotificationModal(): JSX.Element {
             }}>
             Kick
           </Button>
+          <Spacer />
           <Button
             colorScheme='red'
             onClick={() => {
