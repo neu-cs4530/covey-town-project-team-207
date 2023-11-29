@@ -77,18 +77,15 @@ export default class VoteKick {
     let numNoKickVotes = 0;
     let votingDone = false;
     players.forEach(player => {
+      if (this.hasVoted(player.id) && this._votes[player.id]) {
+        numKickVotes++;
+      } else if (this.hasVoted(player.id) && !this._votes[player.id]) {
+        numNoKickVotes++;
+      }
       if (numKickVotes > numPlayers / 2 || numNoKickVotes > numPlayers / 2) {
         votingDone = true;
       }
-      if (this.hasVoted(player.id)) {
-        numKickVotes++;
-      } else {
-        numNoKickVotes++;
-      }
     });
-    if (numKickVotes > numPlayers / 2 || numNoKickVotes > numPlayers / 2) {
-      votingDone = true;
-    }
     return votingDone;
   }
 }
