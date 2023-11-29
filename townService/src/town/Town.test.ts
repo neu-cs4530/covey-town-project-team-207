@@ -18,6 +18,7 @@ import {
   PlayerLocation,
   TownEmitter,
   ViewingArea as ViewingAreaModel,
+  VoteResponse,
 } from '../types/CoveyTownSocket';
 import ConversationArea from './ConversationArea';
 import Town from './Town';
@@ -387,6 +388,7 @@ describe('Town', () => {
         'chatMessage',
         'playerMovement',
         'interactableUpdate',
+        'sendVote',
       ];
       expectedEvents.forEach(eachEvent =>
         expect(getEventListener(playerTestData.socket, eachEvent)).toBeDefined(),
@@ -924,6 +926,7 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(() => getLastEmittedEvent(townEmitter, 'playerNeedsVotekick')).toThrowError();
 
       // Profanity Count: 2
       chatHandler(profaneMessage);
@@ -932,6 +935,7 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. There will be a votekick initiated on the third offense.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(() => getLastEmittedEvent(townEmitter, 'playerNeedsVotekick')).toThrowError();
 
       // Profanity Count: 3
       chatHandler(profaneMessage);
@@ -940,6 +944,12 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. A votekick will now be initiated.`;
       expect(recentChatMessage).toBe(warningMessage);
+      // the town should emit an event containing the disruptive player's id and username indicating that the votekick should be initiated only on the third offense
+      getLastEmittedEvent(townEmitter, 'playerNeedsVotekick');
+      expect(townEmitter.emit).toBeCalledWith('playerNeedsVotekick', {
+        offendingPlayerID: player.id,
+        offendingPlayerName: player.userName,
+      });
 
       // Profanity Count: 4
       chatHandler(profaneMessage);
@@ -948,6 +958,7 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(townEmitter.emit).not.toBeCalledWith('playerNeedsVotekick');
 
       // Profanity Count: 5
       chatHandler(profaneMessage);
@@ -956,6 +967,7 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will be kicked from the town on the sixth offense.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(townEmitter.emit).not.toBeCalledWith('playerNeedsVotekick');
 
       // Profanity Count: 6
       chatHandler(profaneMessage);
@@ -964,9 +976,83 @@ describe('Town', () => {
       recentChatMessage = getLastEmittedEvent(townEmitter, 'chatMessage').body;
       warningMessage = `WARNING: Player ${player.userName} has been flagged for profanity. The player will immediately be kicked from the town.`;
       expect(recentChatMessage).toBe(warningMessage);
+      expect(townEmitter.emit).not.toBeCalledWith('playerNeedsVotekick');
 
       playerTestData.socket.disconnect(true);
       expect(playerTestData.socket.disconnect).toBeCalledWith(true);
+    });
+    it('should not initialize a votekick if a votekick is already in progress, throwing an error instead', async () => {
+      player.incProfanityOffenses();
+      player.incProfanityOffenses();
+      player.incProfanityOffenses();
+      town.handleProfanityOffenses(player, playerTestData.socket);
+      const player2 = await town.addPlayer(playerTestData.userName, playerTestData.socket);
+      player2.incProfanityOffenses();
+      player2.incProfanityOffenses();
+      player2.incProfanityOffenses();
+      expect(() => town.handleProfanityOffenses(player2, playerTestData.socket)).toThrowError();
+    });
+  });
+  describe('Votekick-related functionality', () => {
+    let player2: Player;
+    let player3: Player;
+
+    beforeEach(async () => {
+      player.incProfanityOffenses();
+      player.incProfanityOffenses();
+      player.incProfanityOffenses();
+      town.handleProfanityOffenses(player, playerTestData.socket);
+      player2 = await town.addPlayer(playerTestData.userName, playerTestData.socket);
+      player3 = await town.addPlayer(playerTestData.userName, playerTestData.socket);
+    });
+
+    it('should not emit a applyVotekick event when the town receives a vote response but voting is not finished', async () => {
+      const voteHandler = getEventListener(playerTestData.socket, 'sendVote');
+      const voteResponse: VoteResponse = {
+        fromPlayer: player2.id,
+        offendingPlayerID: player.id,
+        voteToRemove: true,
+      };
+      voteHandler(voteResponse);
+      expect(() => getLastEmittedEvent(townEmitter, 'applyVotekick')).toThrowError();
+    });
+    it('should emit a applyVotekick event indicating the voting failed when the town receives a vote response ending the vote, leading to a majority vote against a votekick', async () => {
+      const voteHandler = getEventListener(playerTestData.socket, 'sendVote');
+      const voteResponse: VoteResponse = {
+        fromPlayer: player2.id,
+        offendingPlayerID: player.id,
+        voteToRemove: false,
+      };
+      voteHandler(voteResponse);
+      const voteResponse2: VoteResponse = {
+        fromPlayer: player3.id,
+        offendingPlayerID: player.id,
+        voteToRemove: false,
+      };
+      voteHandler(voteResponse2);
+      expect(townEmitter.emit).toBeCalledWith('applyVotekick', {
+        offendingPlayerID: player.id,
+        kick: false,
+      });
+    });
+    it('should emit a applyVotekick event indicating the voting succeeded the vote response leads to a player being kicked', async () => {
+      const voteHandler = getEventListener(playerTestData.socket, 'sendVote');
+      const voteResponse: VoteResponse = {
+        fromPlayer: player2.id,
+        offendingPlayerID: player.id,
+        voteToRemove: true,
+      };
+      voteHandler(voteResponse);
+      const voteResponse2: VoteResponse = {
+        fromPlayer: player3.id,
+        offendingPlayerID: player.id,
+        voteToRemove: true,
+      };
+      voteHandler(voteResponse2);
+      expect(townEmitter.emit).toBeCalledWith('applyVotekick', {
+        offendingPlayerID: player.id,
+        kick: true,
+      });
     });
   });
 });
