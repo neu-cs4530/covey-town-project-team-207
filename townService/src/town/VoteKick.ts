@@ -1,19 +1,19 @@
 import InvalidParametersError, {
   PLAYER_ALREADY_VOTED_MESSAGE,
 } from '../lib/InvalidParametersError';
-import { PlayerID } from '../types/CoveyTownSocket';
+import { Player, PlayerID } from '../types/CoveyTownSocket';
 
 /**
  * Model for a vote kick, used to record votes and determine the result of the vote
  */
 export default class VoteKick {
-  protected _votes: { [playerID: PlayerID]: boolean };
+  private _votes: { [playerID: PlayerID]: boolean };
 
-  public _playerIDToKick: PlayerID;
+  private _playerToKick: Player;
 
-  public constructor(playerIDToKick: PlayerID) {
+  public constructor(playerToKick: Player) {
     this._votes = {};
-    this._playerIDToKick = playerIDToKick;
+    this._playerToKick = playerToKick;
   }
 
   /**
@@ -24,10 +24,10 @@ export default class VoteKick {
   }
 
   /**
-   * Getter for the player ID to kick
+   * Getter for the player to kick
    */
-  public get playerIDToKick(): PlayerID {
-    return this._playerIDToKick;
+  public get playerToKick(): Player {
+    return this._playerToKick;
   }
 
   /**
@@ -36,7 +36,7 @@ export default class VoteKick {
    * @param vote true if the player votes to kick the player, false if the player votes to not kick the player
    */
   public addVote(playerID: PlayerID, vote: boolean): void {
-    if (this._votes[playerID] !== undefined) {
+    if (this._votes[playerID] === undefined) {
       this._votes[playerID] = vote;
     } else {
       throw new InvalidParametersError(PLAYER_ALREADY_VOTED_MESSAGE);
@@ -69,5 +69,26 @@ export default class VoteKick {
       return true;
     }
     return false;
+  }
+
+  public isVotingDone(players: Player[]): boolean {
+    const numPlayers = players.length;
+    let numKickVotes = 0;
+    let numNoKickVotes = 0;
+    let votingDone = false;
+    players.forEach(player => {
+      if (numKickVotes > numPlayers / 2 || numNoKickVotes > numPlayers / 2) {
+        votingDone = true;
+      }
+      if (this.hasVoted(player.id)) {
+        numKickVotes++;
+      } else {
+        numNoKickVotes++;
+      }
+    });
+    if (numKickVotes > numPlayers / 2 || numNoKickVotes > numPlayers / 2) {
+      votingDone = true;
+    }
+    return votingDone;
   }
 }

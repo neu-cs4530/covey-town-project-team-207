@@ -1,38 +1,73 @@
 import {
   Modal,
   ModalBody,
-  ModalCloseButton,
   ModalContent,
   ModalHeader,
   ModalOverlay,
+  useDisclosure,
+  Text,
+  ModalFooter,
+  Button,
 } from '@chakra-ui/react';
+import assert from 'assert';
 import React, { useEffect, useState } from 'react';
+import useTownController from '../../../../hooks/useTownController';
+import { OffendingPlayerData, PlayerID } from '../../../../types/CoveyTownSocket';
 
-export default function NewVoteKickNotificationModal({
-  username,
-}: {
-  username: string;
-}): JSX.Element {
-  const [timer, setTimer] = useState<number>(10);
+export default function VotekickNotificationModal(): JSX.Element {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const townController = useTownController();
+  const [playerToKickName, setPlayerToKickName] = useState<string | null>(null);
+  const [playerToKickID, setPlayerToKickID] = useState<PlayerID | null>(null);
 
   useEffect(() => {
-    if (timer > 0) {
-      const countdown = setInterval(() => {
-        setTimer(timer - 1);
-      }, 1000);
-      return () => {
-        clearInterval(countdown);
-      };
-    }
-  }, [timer]);
+    const handleInitializeVotekick = (offendingPlayerData: OffendingPlayerData) => {
+      setPlayerToKickName(offendingPlayerData.offendingPlayerName);
+      setPlayerToKickID(offendingPlayerData.offendingPlayerID);
+      onOpen();
+    };
+    const handleEndVotekick = () => {
+      onClose();
+    };
+    townController.addListener('initializeVotekick', handleInitializeVotekick);
+    townController.addListener('endVotekick', handleEndVotekick);
+    return () => {
+      townController.removeListener('initializeVotekick', handleInitializeVotekick);
+      townController.removeListener('endVotekick', handleEndVotekick);
+    };
+  }, [townController]);
 
   return (
-    <Modal isOpen={username !== undefined && timer > 0} onClose={() => {}}>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Disruptive user identified, votekick for {username} occuring in:</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>{timer} seconds</ModalBody>
+        <ModalHeader>Votekick for {playerToKickName}</ModalHeader>
+        <ModalBody>
+          <Text>
+            User {playerToKickName} has said inappropriate language multiple times. Please vote to kick or not kick them from the town.
+          </Text>
+        </ModalBody>
+
+        <ModalFooter>
+          <Button
+            colorScheme='green'
+            onClick={() => {
+              assert(playerToKickName);
+              assert(playerToKickID);
+              townController.emitVote(playerToKickID, true);
+            }}>
+            Kick
+          </Button>
+          <Button
+            colorScheme='red'
+            onClick={() => {
+              assert(playerToKickName);
+              assert(playerToKickID);
+              townController.emitVote(playerToKickID, false);
+            }}>
+            Don&apos;t Kick
+          </Button>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );

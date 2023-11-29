@@ -175,6 +175,22 @@ interface InteractableCommandBase {
 }
 
 export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<TicTacToeMove> | LeaveGameCommand;
+
+export type OffendingPlayerData = {
+  offendingPlayerID: PlayerID,
+  offendingPlayerName: string,
+}
+
+export type VoteResponse = {
+  fromPlayer: PlayerID,
+  offendingPlayerID: PlayerID,
+  voteToRemove: boolean,
+}
+
+export type VotekickData = {
+  offendingPlayerID: PlayerID,
+  kick: boolean,
+}
 export interface ViewingAreaUpdateCommand  {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -209,7 +225,8 @@ export interface ServerToClientEvents {
   playerMoved: (movedPlayer: Player) => void;
   playerDisconnect: (disconnectedPlayer: Player) => void;
   playerJoined: (newPlayer: Player) => void;
-  playerVoteKick: (offendingPlayer: Player) => void;
+  playerNeedsVotekick: (offendingPlayerData: OffendingPlayerData) => void;
+  applyVotekick: (votekickData: VotekickData) => void;
   initialize: (initialData: TownJoinResponse) => void;
   townSettingsUpdated: (update: TownSettingsUpdate) => void;
   townClosing: () => void;
@@ -223,4 +240,5 @@ export interface ClientToServerEvents {
   playerMovement: (movementData: PlayerLocation) => void;
   interactableUpdate: (update: Interactable) => void;
   interactableCommand: (command: InteractableCommand & InteractableCommandBase) => void;
+  sendVote: (voteResponse: VoteResponse) => void;
 }

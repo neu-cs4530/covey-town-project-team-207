@@ -22,10 +22,12 @@ import {
   InteractableCommandBase,
   InteractableCommandResponse,
   InteractableID,
+  OffendingPlayerData,
   PlayerID,
   PlayerLocation,
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
+  VoteResponse,
 } from '../types/CoveyTownSocket';
 import { isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
@@ -77,7 +79,20 @@ export type TownEvents = {
    */
   playerMoved: (movedPlayer: PlayerController) => void;
 
-  playerVoteKick: (offendingPlayer: PlayerController) => void;
+  /**
+   * An event that indicates a player has said too much offensive language and a votekick must be initialized.
+   */
+  initializeVotekick: (offendingPlayerData: OffendingPlayerData) => void;
+
+  /**
+   * An event that indicates voting for a votekick has ended.
+   */
+  endVotekick: () => void;
+
+  /**
+   * An event that indicates the player has voted.
+   */
+  sendVote: (voteResponse: VoteResponse) => void;
 
   /**
    * An event that indicates that the set of active interactable areas has changed. This event is dispatched
@@ -426,12 +441,22 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     });
 
     /** When a player has three offenses of using inappropriate words, emit an event to the controller's event listeners */
-    this._socket.on('playerVoteKick', voteKickPlayer => {
-      const playerToUpdate = this.players.find(eachPlayer => eachPlayer.id === voteKickPlayer.id);
+    this._socket.on('playerNeedsVotekick', offendingPlayerData => {
+      const playerToUpdate = this.players.find(eachPlayer => eachPlayer.id === offendingPlayerData.offendingPlayerID);
       if (playerToUpdate) {
-        this.emit('playerVoteKick', playerToUpdate);
+        this.emit('initializeVotekick', offendingPlayerData);
       }
     });
+
+    /** When voting for a votekick has ended, emit an event to the controller's event listeners signifying the votekick should
+     * be applied
+     */
+    this._socket.on('applyVotekick', votekickData => {
+      this.emit('endVotekick');
+      if (votekickData.kick && this.ourPlayer.id === votekickData.offendingPlayerID) {
+        this.kickOurPlayer();
+      }
+    })
 
     /**
      * When an interactable's state changes, push that update into the relevant controller
@@ -475,6 +500,21 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     assert(ourPlayer);
     ourPlayer.location = newLocation;
     this.emit('playerMoved', ourPlayer);
+  }
+
+  /**
+   * Emit a sendVote event for the current player, notifying the town service that a player has voted.
+   * @param offendingPlayerID ID of the offending player
+   * @param vote whether our player voted to kick (true) or not to kick (false)
+   */
+  public emitVote(offendingPlayerID: PlayerID, vote: boolean) {
+    const ourPlayer = this._ourPlayer;
+    assert(ourPlayer)
+    this._socket.emit('sendVote', {
+      fromPlayer: ourPlayer.id,
+      offendingPlayerID,
+      voteToRemove: vote,
+    })
   }
 
   /**
