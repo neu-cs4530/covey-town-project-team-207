@@ -19,12 +19,14 @@ import {
   ServerToClientEvents,
   SocketData,
   ViewingArea as ViewingAreaModel,
+  VoteResponse,
 } from '../types/CoveyTownSocket';
 import { logError } from '../Utils';
 import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
 import ViewingArea from './ViewingArea';
+import VoteKick from './VoteKick';
 
 /**
  * The Town class implements the logic for each town: managing the various events that
@@ -95,6 +97,8 @@ export default class Town {
 
   private _connectedSockets: Set<CoveyTownSocket> = new Set();
 
+  private _votekickModel: VoteKick | null;
+
   constructor(
     friendlyName: string,
     isPubliclyListed: boolean,
@@ -107,6 +111,7 @@ export default class Town {
     this._isPubliclyListed = isPubliclyListed;
     this._friendlyName = friendlyName;
     this._broadcastEmitter = broadcastEmitter;
+    this._votekickModel = null;
   }
 
   /**
@@ -136,7 +141,7 @@ export default class Town {
     });
 
     // Set up a listener to forward all chat messages to all clients in the town.
-    // if the message has profanity in it, the players profanity count is incremented, and
+    // If the message has profanity in it, the players profanity count is incremented, and
     // actions are triggered based on the number of profanity offenses
     socket.on('chatMessage', async (message: ChatMessage) => {
       this._broadcastEmitter.emit('chatMessage', message);
@@ -153,6 +158,12 @@ export default class Town {
           `Message from ${offendingPlayer.userName} found to have profanity. The message was ${message.body}. This was the players ${offendingPlayer.profanityOffenses} offense`,
         );
       }
+    });
+
+    // when we hear a response from a front end client, make the necessary changes to the votekick instance
+    socket.on('sendVote', (voteResponse: VoteResponse) => {
+      console.log('heard vote reponse from front end client');
+      this._handleVoteResponse(voteResponse);
     });
 
     // Register an event listener for the client socket: if the client updates their
@@ -525,14 +536,35 @@ export default class Town {
 
     // Initiate a votekick on the offending player on their third offense
     if (offendingPlayer.profanityOffenses === 3) {
-      // Initiate votekick
-      this._broadcastEmitter.emit('playerVoteKick', offendingPlayer.toPlayerModel());
+      if (this._votekickModel === null) {
+        this._votekickModel = new VoteKick(offendingPlayer);
+        this._broadcastEmitter.emit('playerNeedsVotekick', {
+          offendingPlayerID: offendingPlayer.id,
+          offendingPlayerName: offendingPlayer.userName,
+        });
+      } else {
+        throw Error('Votekick attempted to start when one is ongoing');
+      }
     }
 
     // Remove the offending player on their third offense after the votekick has failed
     if (offendingPlayer.profanityOffenses === 6) {
       // Remove player
       this._removePlayer(offendingPlayer);
+    }
+  }
+
+  private _handleVoteResponse(voteResponse: VoteResponse) {
+    assert(this._votekickModel);
+    console.log(`heard vote response from ${voteResponse.fromPlayer} `);
+    this._votekickModel.addVote(voteResponse.fromPlayer, voteResponse.voteToRemove);
+    if (this._votekickModel.isVotingDone(this._players)) {
+      console.log('voting will now end');
+      this._broadcastEmitter.emit('applyVotekick', {
+        offendingPlayerID: voteResponse.offendingPlayerID,
+        kick: this._votekickModel.voteKickSuccessful(),
+      });
+      this._votekickModel = null;
     }
   }
 }
