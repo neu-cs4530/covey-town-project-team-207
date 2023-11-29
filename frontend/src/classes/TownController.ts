@@ -442,7 +442,9 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
     /** When a player has three offenses of using inappropriate words, emit an event to the controller's event listeners */
     this._socket.on('playerNeedsVotekick', offendingPlayerData => {
-      const playerToUpdate = this.players.find(eachPlayer => eachPlayer.id === offendingPlayerData.offendingPlayerID);
+      const playerToUpdate = this.players.find(
+        eachPlayer => eachPlayer.id === offendingPlayerData.offendingPlayerID,
+      );
       if (playerToUpdate) {
         this.emit('initializeVotekick', offendingPlayerData);
       }
@@ -456,7 +458,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       if (votekickData.kick && this.ourPlayer.id === votekickData.offendingPlayerID) {
         this.kickOurPlayer();
       }
-    })
+    });
 
     /**
      * When an interactable's state changes, push that update into the relevant controller
@@ -509,12 +511,12 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   public emitVote(offendingPlayerID: PlayerID, vote: boolean) {
     const ourPlayer = this._ourPlayer;
-    assert(ourPlayer)
+    assert(ourPlayer);
     this._socket.emit('sendVote', {
       fromPlayer: ourPlayer.id,
       offendingPlayerID,
       voteToRemove: vote,
-    })
+    });
   }
 
   /**

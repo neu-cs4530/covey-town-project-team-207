@@ -431,7 +431,6 @@ describe('TownController', () => {
         PlayerController.fromPlayerModel(testPlayer),
       ]);
     });
-
     it('Emits playersChanged events when players leave', () => {
       emitEventAndExpectListenerFiring('playerDisconnect', testPlayer, 'playersChanged', []);
     });
@@ -457,6 +456,88 @@ describe('TownController', () => {
         'playerMoved',
         PlayerController.fromPlayerModel(testPlayer),
       );
+    });
+    describe('Votekick-related events', () => {
+      beforeEach(async () => {
+        await mockTownControllerConnection(testController, mockSocket);
+        jest.spyOn(testController, 'disconnect');
+      });
+      it('Emits an initializeVotekick event when the townController receives a playerNeedsVotekick event', async () => {
+        emitEventAndExpectListenerFiring(
+          'playerNeedsVotekick',
+          {
+            offendingPlayerID: testController.ourPlayer.id,
+            offendingPlayerName: testController.ourPlayer.userName,
+          },
+          'initializeVotekick',
+          {
+            offendingPlayerID: testController.ourPlayer.id,
+            offendingPlayerName: testController.ourPlayer.userName,
+          },
+        );
+      });
+      it('Does not emit an initializeVotekick event when the townController receives a playerNeedsVotekick event but the player does not exist in the townController', async () => {
+        const votekickListener = getEventListener(mockSocket, 'playerNeedsVotekick');
+        const mockListener = jest.fn() as jest.MockedFunction<TownEvents['initializeVotekick']>;
+        testController.addListener('initializeVotekick', mockListener);
+        votekickListener({
+          offendingPlayerID: testPlayer.id,
+          offendingPlayerName: testPlayer.userName,
+        });
+        expect(mockListener).not.toBeCalled();
+      });
+      it('Emits an endVoteKick event when townController receives a applyVotekick event', async () => {
+        emitEventAndExpectListenerFiring(
+          'applyVotekick',
+          {
+            offendingPlayerID: testController.ourPlayer.id,
+            kick: true,
+          },
+          'endVotekick',
+        );
+      });
+      it('Kicks the current player if they fit the description and are voted to be kicked after receiving an applyVotekick event', async () => {
+        emitEventAndExpectListenerFiring(
+          'applyVotekick',
+          {
+            offendingPlayerID: testController.ourPlayer.id,
+            kick: true,
+          },
+          'endVotekick',
+        );
+        expect(testController.disconnect).toBeCalled();
+      });
+      it('Does not kick the current player if they fit the description but are voted not to be kicked after receiving an applyVotekick event', async () => {
+        emitEventAndExpectListenerFiring(
+          'applyVotekick',
+          {
+            offendingPlayerID: testController.ourPlayer.id,
+            kick: false,
+          },
+          'endVotekick',
+        );
+        expect(testController.disconnect).not.toBeCalled();
+      });
+      it('Does not kick a player if the current player does not fit the description, regardless of the outcome', async () => {
+        emitEventAndExpectListenerFiring(
+          'applyVotekick',
+          {
+            offendingPlayerID: testPlayer.id,
+            kick: false,
+          },
+          'endVotekick',
+        );
+        expect(testController.disconnect).not.toBeCalled();
+        emitEventAndExpectListenerFiring(
+          'applyVotekick',
+          {
+            offendingPlayerID: testPlayer.id,
+            kick: true,
+          },
+          'endVotekick',
+        );
+        expect(testController.disconnect).not.toBeCalled();
+      });
     });
   });
   it('Disconnects the socket and clears the coveyTownController when disconnection', async () => {
