@@ -12,13 +12,13 @@ describe('Tests for VoteKick Model', () => {
 
   beforeEach(async () => {
     playerToKick = new Player(nanoid(), townEmitter);
-    model = new VoteKick(playerToKick.userName);
+    model = new VoteKick(playerToKick);
     player = new Player(nanoid(), townEmitter);
   });
   it('Should create a VoteKick object with the correct username and an empty vote dictionary', () => {
     expect(model).toBeDefined();
     expect(model.votes).toEqual({});
-    expect(model.playerIDToKick).toEqual(playerToKick.userName);
+    expect(model.playerToKick).toEqual(playerToKick);
   });
   it('Should add a positive vote to the vote dictionary when addVote is called with "true"', () => {
     model.addVote(player.userName, true);
